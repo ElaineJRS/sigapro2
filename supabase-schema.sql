@@ -149,3 +149,5 @@ do $$ declare table_name text; begin
     execute format('create policy siga_public_delete on public.%I for delete to anon, authenticated using (true)', table_name);
   end loop;
 end $$;
+
+notify pgrst, 'reload schema';

@@ -573,7 +573,7 @@
                 const { data, error } = await sigaSupabase.from(table).select('*');
                 if (error || !data) return;
                 const list = data.map(row => table === 'lojas' ? { ...row, name: row.nome ?? row.name, createdAt: row.criado_em ?? row.created_at ?? row.createdAt } : table === 'perfis' ? { ...row, lojaId: row.loja_id ?? row.lojaId, name: row.nome ?? row.name, role: row.cargo ?? row.funcao ?? row.role, username: row.username ?? row.login, password: row.password ?? row.senha, slug: row.slug, fullSlug: row.full_slug ?? row.link_slug ?? row.fullSlug, createdAt: row.created_at ?? row.criado_em ?? row.createdAt } : databaseRowToApp(table, row));
-                localStorage.setItem(storageKey, JSON.stringify(list));
+                if (list.length) localStorage.setItem(storageKey, JSON.stringify(list));
             }));
         }
 
@@ -608,6 +608,17 @@
 
         function normalizeAccessSlug(value) {
             try { return decodeURIComponent(String(value || '').trim()).replace(/\/+$/, ''); } catch (error) { return String(value || '').trim().replace(/\/+$/, ''); }
+        }
+
+        function findUsuarioByAccessSlug(fullSlug) {
+            const normalizedSlug = normalizeAccessSlug(fullSlug);
+            const usuarios = getUsuarios();
+            const exact = usuarios.find(item => normalizeAccessSlug(item.fullSlug) === normalizedSlug);
+            if (exact) return exact;
+            return usuarios.find(item => {
+                const loja = getLojas().find(store => store.id === item.lojaId);
+                return loja && normalizeAccessSlug(`${loja.slug}-${item.slug}`) === normalizedSlug;
+            });
         }
 
         function copyTextRobust(text, callback) {
@@ -706,7 +717,7 @@
 
         function showPersonLogin(fullSlug) {
             const normalizedSlug = normalizeAccessSlug(fullSlug);
-            const usuario = getUsuarios().find(item => normalizeAccessSlug(item.fullSlug) === normalizedSlug);
+            const usuario = findUsuarioByAccessSlug(normalizedSlug);
             const loja = usuario ? getLojas().find(item => item.id === usuario.lojaId) : null;
             showFlexView('view-pessoa-login');
             const form = document.getElementById('pessoa-login-form');
@@ -879,7 +890,7 @@
             document.getElementById('pessoa-login-form').addEventListener('submit', event => {
                 event.preventDefault();
                 const fullSlug = normalizeAccessSlug(event.target.dataset.fullSlug);
-                const usuario = getUsuarios().find(item => normalizeAccessSlug(item.fullSlug) === fullSlug);
+                const usuario = findUsuarioByAccessSlug(fullSlug);
                 const username = document.getElementById('pessoa-username-input').value.trim();
                 const password = document.getElementById('pessoa-password-input').value;
                 if (!usuario || usuario.username !== username || usuario.password !== password) {
