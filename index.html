@@ -46,7 +46,7 @@
         <form id="master-login-form" class="w-full max-w-sm rounded-[2rem] border border-slate-100 bg-white p-8 shadow-xl">
             <div class="mb-6 text-center"><div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white"><i data-lucide="shield-check" class="h-6 w-6"></i></div><h1 class="text-lg font-black text-slate-800">Painel Master</h1><p class="text-xs text-slate-400">Acesso administrativo</p></div>
             <label class="mb-3 block text-[10px] font-black uppercase tracking-wider text-slate-400">E-mail<input id="master-email-input" type="email" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"></label>
-            <label class="mb-4 block text-[10px] font-black uppercase tracking-wider text-slate-400">Senha<input id="master-password-input" type="password" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"></label>
+            <label class="mb-4 block text-[10px] font-black uppercase tracking-wider text-slate-400">Senha<div class="mt-1 flex items-center rounded-xl border border-slate-200 focus-within:border-indigo-400"><input id="master-password-input" type="password" required class="w-full border-0 px-3 py-2.5 text-sm font-medium outline-none"><button type="button" id="toggle-master-password" aria-label="Mostrar senha" class="px-3 text-[10px] font-black text-slate-400 hover:text-indigo-600">Mostrar</button></div></label>
             <p id="master-login-error" class="mb-3 min-h-4 text-center text-[10px] font-bold text-red-500"></p>
             <button type="submit" class="w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-black text-white hover:bg-indigo-700">Entrar</button>
             <a href="#" class="mt-4 block text-center text-[10px] font-bold text-slate-400 hover:text-slate-600">Voltar</a>
@@ -839,15 +839,26 @@
         }
 
         function bindAuthForms() {
+            document.getElementById('toggle-master-password').addEventListener('click', event => {
+                const input = document.getElementById('master-password-input');
+                const visible = input.type === 'text';
+                input.type = visible ? 'password' : 'text';
+                event.currentTarget.textContent = visible ? 'Mostrar' : 'Ocultar';
+                event.currentTarget.setAttribute('aria-label', visible ? 'Mostrar senha' : 'Ocultar senha');
+            });
+
             document.getElementById('master-login-form').addEventListener('submit', async event => {
                 event.preventDefault();
-                const email = document.getElementById('master-email-input').value.trim();
+                const email = document.getElementById('master-email-input').value.trim().toLowerCase();
                 const password = document.getElementById('master-password-input').value;
                 const errorLabel = document.getElementById('master-login-error');
                 errorLabel.textContent = '';
                 const { error } = await sigaSupabase.auth.signInWithPassword({ email, password });
                 if (error) {
-                    errorLabel.textContent = 'E-mail ou senha inválidos.';
+                    const message = String(error.message || '').toLowerCase();
+                    if (message.includes('api key')) errorLabel.textContent = 'A chave pública do Supabase está inválida ou desatualizada.';
+                    else if (message.includes('confirm')) errorLabel.textContent = 'Confirme o e-mail da conta no Supabase antes de entrar.';
+                    else errorLabel.textContent = 'E-mail ou senha inválidos.';
                     return;
                 }
                 await hydrateFromSupabase();
