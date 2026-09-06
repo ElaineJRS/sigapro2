@@ -1,0 +1,2068 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIGA - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .tier-bronze { background: linear-gradient(135deg, #cd7f32, #a0522d); }
+        .tier-silver { background: linear-gradient(135deg, #94a3b8, #475569); }
+        .tier-gold { background: linear-gradient(135deg, #fbbf24, #d97706); }
+        .tier-diamond { background: linear-gradient(135deg, #22d3ee, #0891b2); }
+        .progress-glow { box-shadow: 0 0 20px rgba(99, 102, 241, 0.2); }
+        #observation-editor:empty::before { content: attr(data-placeholder); color: #94a3b8; }
+        .nav-indicator { position: absolute; bottom: 0; height: 3px; background: linear-gradient(90deg, #4f46e5, #7c3aed); border-radius: 2px 2px 0 0; transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1); }
+        @media (max-width: 767px) {
+            #mobile-navigation { position: fixed; inset: auto 0 0; z-index: 60; }
+        }
+        main.hidden { display: none; }
+        #tasks-page.active { display: block; }
+        #tasks-page:not(.active) { display: none; }
+        .date-carousel { scrollbar-width: none; touch-action: pan-x; }
+        .date-carousel::-webkit-scrollbar { display: none; }
+        .observation-preview { max-height: 2.8em; overflow: hidden; cursor: pointer; }
+        .observation-preview.observation-expanded { max-height: none; }
+    </style>
+</head>
+<body class="bg-[#FBFDFF] text-slate-900 min-h-screen pb-28">
+
+    <!-- LANDING -->
+    <div id="view-landing" class="hidden min-h-screen items-center justify-center bg-[#FBFDFF] p-6">
+        <div class="text-center">
+            <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-600 text-white"><i data-lucide="zap" class="h-7 w-7"></i></div>
+            <h1 class="text-2xl font-black text-slate-800">SIGA</h1>
+            <p class="mt-2 text-sm text-slate-500">Acesse pelo link fornecido pela sua loja.</p>
+            <a href="#master-login" class="mt-6 inline-block text-[10px] font-black uppercase tracking-widest text-indigo-400 hover:text-indigo-600">Área administrativa</a>
+        </div>
+    </div>
+
+    <!-- LOGIN MASTER -->
+    <div id="view-master-login" class="hidden min-h-screen items-center justify-center bg-[#FBFDFF] p-6">
+        <form id="master-login-form" class="w-full max-w-sm rounded-[2rem] border border-slate-100 bg-white p-8 shadow-xl">
+            <div class="mb-6 text-center"><div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white"><i data-lucide="shield-check" class="h-6 w-6"></i></div><h1 class="text-lg font-black text-slate-800">Painel Master</h1><p class="text-xs text-slate-400">Acesso administrativo</p></div>
+            <label class="mb-3 block text-[10px] font-black uppercase tracking-wider text-slate-400">E-mail<input id="master-email-input" type="email" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"></label>
+            <label class="mb-4 block text-[10px] font-black uppercase tracking-wider text-slate-400">Senha<input id="master-password-input" type="password" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"></label>
+            <p id="master-login-error" class="mb-3 min-h-4 text-center text-[10px] font-bold text-red-500"></p>
+            <button type="submit" class="w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-black text-white hover:bg-indigo-700">Entrar</button>
+            <a href="#" class="mt-4 block text-center text-[10px] font-bold text-slate-400 hover:text-slate-600">Voltar</a>
+        </form>
+    </div>
+
+    <!-- LOGIN DE LOJA/PESSOA -->
+    <div id="view-pessoa-login" class="hidden min-h-screen items-center justify-center bg-[#FBFDFF] p-6">
+        <form id="pessoa-login-form" class="w-full max-w-sm rounded-[2rem] border border-slate-100 bg-white p-8 shadow-xl">
+            <div class="mb-6 text-center"><div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white"><i data-lucide="log-in" class="h-6 w-6"></i></div><h1 id="pessoa-login-title" class="text-lg font-black text-slate-800">Acesso da equipe</h1><p id="pessoa-login-subtitle" class="text-xs text-slate-400">Informe seu login e senha</p></div>
+            <label class="mb-3 block text-[10px] font-black uppercase tracking-wider text-slate-400">Login<input id="pessoa-username-input" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"></label>
+            <label class="mb-4 block text-[10px] font-black uppercase tracking-wider text-slate-400">Senha<input id="pessoa-password-input" type="password" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"></label>
+            <p id="pessoa-login-error" class="mb-3 min-h-4 text-center text-[10px] font-bold text-red-500"></p>
+            <button type="submit" class="w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-black text-white hover:bg-indigo-700">Entrar</button>
+        </form>
+    </div>
+
+    <!-- PAINEL MASTER -->
+    <div id="view-master-panel" class="hidden min-h-screen bg-[#FBFDFF]">
+        <header class="sticky top-0 z-50 border-b border-slate-100 bg-white/80 backdrop-blur-xl">
+            <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+                <div class="flex items-center gap-2"><div class="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white"><i data-lucide="shield-check" class="h-5 w-5"></i></div><span class="text-xl font-black text-slate-800">SIGA Admin</span></div>
+                <button type="button" id="master-logout" class="rounded-xl bg-slate-100 px-4 py-2 text-xs font-black text-slate-600 hover:bg-slate-200">Sair</button>
+            </div>
+        </header>
+        <main class="mx-auto max-w-5xl space-y-6 p-4">
+            <section class="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
+                <h2 class="mb-4 text-lg font-black text-slate-800">Lojas cadastradas</h2>
+                <form id="loja-form" class="mb-4 flex flex-wrap gap-2">
+                    <input id="loja-name-input" required placeholder="Nome da loja" class="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400">
+                    <button type="submit" class="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-black text-white hover:bg-indigo-700">Adicionar loja</button>
+                </form>
+                <div id="loja-list" class="space-y-2"></div>
+            </section>
+
+            <section id="loja-team-section" class="hidden rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
+                <div class="mb-4 flex items-center justify-between"><h2 id="loja-team-title" class="text-lg font-black text-slate-800">Equipe da loja</h2><button type="button" id="close-loja-team" class="text-[10px] font-black uppercase text-slate-400">Fechar</button></div>
+                <form id="usuario-form" class="mb-4 grid gap-3 sm:grid-cols-2">
+                    <input type="hidden" id="usuario-editing-id">
+                    <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400 sm:col-span-2">Nome completo<input id="usuario-name-input" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"></label>
+                    <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Função<select id="usuario-role-input" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"><option value="vendedor">Vendedor</option><option value="gerente">Gerente</option></select></label>
+                    <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Login<input id="usuario-username-input" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"></label>
+                    <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400 sm:col-span-2">Senha<input id="usuario-password-input" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"></label>
+                    <div class="flex justify-end gap-2 sm:col-span-2"><button type="button" id="cancel-usuario-edit" class="hidden rounded-xl px-4 py-2.5 text-xs font-bold text-slate-500">Cancelar edição</button><button type="submit" class="rounded-xl bg-emerald-500 px-5 py-2.5 text-xs font-black text-white hover:bg-emerald-600">Salvar acesso</button></div>
+                </form>
+                <div id="usuario-list" class="space-y-2"></div>
+            </section>
+        </main>
+    </div>
+
+    <div id="app-shell" class="hidden">
+
+    <!-- HEADER -->
+    <header class="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-slate-100">
+        <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-100">
+                    <i data-lucide="zap" class="w-5 h-5 fill-white"></i>
+                </div>
+                <span class="text-xl font-black tracking-tighter text-slate-800">SIGA</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="session-user-label" class="hidden text-[10px] font-black uppercase tracking-wider text-slate-400 sm:inline"></span>
+                <button type="button" id="app-logout" aria-label="Sair" class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-600"><i data-lucide="log-out" class="h-4 w-4"></i></button>
+            </div>
+        </div>
+        <div id="manager-bar" class="hidden border-t border-amber-100 bg-amber-50 px-4 py-2">
+            <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2 text-xs font-bold text-amber-700"><i data-lucide="shield" class="h-4 w-4"></i><span id="manager-bar-label">Modo gerente</span></div>
+                <div class="flex items-center gap-2">
+                    <select id="manager-vendor-select" class="rounded-lg border border-amber-200 bg-white px-2 py-1 text-xs font-bold text-slate-700"></select>
+                    <button type="button" id="manager-overview-button" class="rounded-lg bg-amber-500 px-3 py-1.5 text-[10px] font-black text-white hover:bg-amber-600">Visão geral</button>
+                </div>
+            </div>
+        </div>
+        <nav id="desktop-navigation" class="hidden border-t border-slate-100 bg-white/80 md:block">
+            <div class="mx-auto flex max-w-5xl items-center gap-2 px-6 py-2">
+                <button type="button" data-desktop-page="dashboard" class="desktop-nav-button rounded-xl px-3 py-2 text-xs font-black text-indigo-600 transition hover:bg-indigo-50"><i data-lucide="layout-grid" class="mr-1 inline h-4 w-4"></i>Início</button>
+                <button type="button" data-desktop-page="service" class="desktop-nav-button rounded-xl px-3 py-2 text-xs font-black text-slate-500 transition hover:bg-indigo-50"><i data-lucide="users" class="mr-1 inline h-4 w-4"></i>Atendimentos</button>
+                <button type="button" data-desktop-page="sales" class="desktop-nav-button rounded-xl px-3 py-2 text-xs font-black text-slate-500 transition hover:bg-indigo-50"><i data-lucide="shopping-bag" class="mr-1 inline h-4 w-4"></i>Vendas</button>
+                <button type="button" data-desktop-page="tasks" class="desktop-nav-button rounded-xl px-3 py-2 text-xs font-black text-slate-500 transition hover:bg-indigo-50"><i data-lucide="check-square" class="mr-1 inline h-4 w-4"></i>Tarefas</button>
+                <button type="button" data-desktop-page="conditional" class="desktop-nav-button rounded-xl px-3 py-2 text-xs font-black text-slate-500 transition hover:bg-indigo-50"><i data-lucide="rotate-ccw" class="mr-1 inline h-4 w-4"></i>Condicionais</button>
+            </div>
+        </nav>
+    </header>
+
+    <main id="dashboard-page" class="max-w-5xl mx-auto p-4 space-y-6">
+        
+        <!-- FRASE DO DIA -->
+        <section class="py-4 text-center">
+            <p class="text-lg md:text-xl font-semibold text-slate-700 italic leading-relaxed">
+                "Grandes batalhas só são dadas a grandes guerreiros."
+            </p>
+            <p class="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] mt-2">— Autor Desconhecido</p>
+        </section>
+
+        <!-- SELETOR DE PERÍODO -->
+        <div class="flex justify-center p-1.5 bg-slate-100 rounded-2xl max-w-sm mx-auto shadow-inner">
+            <button onclick="switchPeriod('dia')" id="btn-dia" class="flex-1 py-2 text-xs font-bold rounded-xl transition-all">DIA</button>
+            <button onclick="switchPeriod('semana')" id="btn-semana" class="flex-1 py-2 text-xs font-bold rounded-xl transition-all bg-white shadow-sm text-indigo-600">SEMANA</button>
+            <button onclick="switchPeriod('mes')" id="btn-mes" class="flex-1 py-2 text-xs font-bold rounded-xl transition-all">MÊS</button>
+        </div>
+
+        <!-- PERFORMANCE CARD -->
+        <section class="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/40 border border-slate-50">
+            <div class="flex justify-between items-start mb-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <h2 id="period-title" class="text-2xl font-black text-slate-800">Meta Semanal</h2>
+                        <span id="badge-nivel" class="tier-silver text-[10px] text-white font-black px-3 py-1 rounded-full uppercase">Prata</span>
+                    </div>
+                    <p id="period-date" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">04 Set - 10 Set</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Realizado</p>
+                    <p id="total-vendas" class="text-3xl font-black text-indigo-600 tabular-nums">R$ 12.450</p>
+                </div>
+            </div>
+
+            <!-- BARRA DE PROGRESSO COM NÍVEIS -->
+            <div class="relative mb-12">
+                <div class="w-full h-4 bg-slate-100 rounded-full overflow-hidden shadow-inner">
+                    <div id="progress-fill" class="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 transition-all duration-1000 progress-glow" style="width: 62%"></div>
+                </div>
+                <div class="absolute top-6 w-full flex justify-between px-1">
+                    <div class="flex flex-col items-center gap-1">
+                        <div class="w-0.5 h-2 bg-slate-200"></div>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase">Bronze</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <div class="w-0.5 h-2 bg-slate-200"></div>
+                        <span class="text-[9px] font-bold text-slate-600 uppercase">Prata</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <div class="w-0.5 h-2 bg-slate-200"></div>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase">Ouro</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <div class="w-0.5 h-2 bg-slate-200"></div>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase">Diamante</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 pt-6 border-t border-slate-50">
+                <div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase">Meta Alvo</p>
+                    <p id="meta-valor" class="text-sm font-bold text-slate-700">R$ 20.000</p>
+                </div>
+                <div class="text-center border-x border-slate-100 px-2">
+                    <p class="text-[9px] font-black text-slate-400 uppercase">Ticket Médio</p>
+                    <p class="text-sm font-bold text-emerald-500 flex items-center justify-center gap-1">
+                        R$ 458 <i data-lucide="arrow-up" class="w-3 h-3"></i>
+                    </p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[9px] font-black text-slate-400 uppercase">Faltam</p>
+                    <p id="falta-valor" class="text-sm font-bold text-orange-500 italic">R$ 7.550</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ROTINA E DICA RÁPIDA -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Rotina -->
+            <section class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                <h3 id="routine-title" role="button" tabindex="0" class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2 cursor-pointer select-none">
+                    <i data-lucide="list-checks" class="w-4 h-4 text-indigo-500"></i> Minhas Tarefas
+                </h3>
+                <div id="routine-preview" class="space-y-3"></div>
+            </section>
+
+            <!-- Dica de Venda -->
+            <section class="bg-indigo-600 p-6 rounded-[2rem] text-white relative overflow-hidden shadow-lg shadow-indigo-100">
+                <i data-lucide="lightbulb" class="absolute -right-2 -bottom-2 w-20 h-20 opacity-20 rotate-12"></i>
+                <h3 class="text-[10px] font-black uppercase tracking-[0.2em] mb-2 opacity-80">Dica de Venda (Microlearning)</h3>
+                <p class="text-sm font-semibold leading-relaxed">
+                    "Técnica da Escassez: Informe ao cliente que as condições de bônus são exclusivas para atendimentos de hoje."
+                </p>
+            </section>
+        </div>
+
+        <div id="observation-modal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="observation-title">
+            <div class="w-full max-w-xl overflow-hidden rounded-[2rem] bg-white shadow-2xl">
+                <div class="flex items-start justify-between border-b border-slate-100 p-5">
+                    <div>
+                        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500">Registro da tarefa</p>
+                        <h2 id="observation-title" class="mt-1 text-lg font-black text-slate-800">Nova observação</h2>
+                    </div>
+                    <button type="button" id="close-observation" aria-label="Fechar editor" class="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200"><i data-lucide="x" class="w-4 h-4"></i></button>
+                </div>
+                <div class="p-5">
+                    <div class="mb-3 flex flex-wrap items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
+                        <button type="button" data-format="bold" aria-label="Negrito" class="editor-tool h-8 w-8 rounded-lg font-black text-slate-600 hover:bg-white">B</button>
+                        <button type="button" data-format="underline" aria-label="Sublinhado" class="editor-tool h-8 w-8 rounded-lg text-sm font-bold text-slate-600 underline hover:bg-white">U</button>
+                        <button type="button" data-format="italic" aria-label="Itálico" class="editor-tool h-8 w-8 rounded-lg font-serif text-sm italic text-slate-600 hover:bg-white">I</button>
+                        <span class="mx-1 h-5 w-px bg-slate-200"></span>
+                        <button type="button" data-format="insertUnorderedList" aria-label="Lista com marcadores" class="editor-tool h-8 w-8 rounded-lg text-slate-600 hover:bg-white"><i data-lucide="list" class="w-4 h-4"></i></button>
+                        <button type="button" data-format="insertOrderedList" aria-label="Lista numerada" class="editor-tool h-8 w-8 rounded-lg text-slate-600 hover:bg-white"><i data-lucide="list-ordered" class="w-4 h-4"></i></button>
+                    </div>
+                    <div id="observation-editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Escreva uma observação..." class="min-h-40 max-h-72 overflow-y-auto rounded-2xl border border-slate-200 p-4 text-sm leading-relaxed text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"></div>
+                    <div class="mt-4 flex justify-end gap-2">
+                        <button type="button" id="cancel-observation" class="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-500 hover:bg-slate-100">Cancelar</button>
+                        <button type="button" id="save-observation" class="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700">Salvar observação</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LISTA DE VENDAS E HUMOR -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="md:col-span-2 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="dashboard-sales-title" role="button" tabindex="0" class="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2 cursor-pointer">
+                        <i data-lucide="shopping-cart" class="w-4 h-4 text-indigo-600"></i> Vendas Hoje
+                    </h3>
+                    <button type="button" id="open-sales-from-dashboard" class="text-[10px] font-black uppercase tracking-wider text-indigo-500">Ver detalhes</button>
+                </div>
+                <p id="dashboard-sales-total" class="mb-3 text-2xl font-black text-indigo-600">R$ 0,00</p>
+                <div id="dashboard-sales-list" class="divide-y divide-slate-50"></div>
+            </div>
+
+            <div id="mood-card" class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm transition-all">
+                <div class="flex items-start justify-between gap-3 mb-4">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <i data-lucide="smile" class="w-4 h-4 text-orange-400"></i>
+                        Registro de Humor
+                    </p>
+                    <button id="toggle-mood-history" type="button" aria-expanded="false" aria-controls="mood-history" aria-label="Mostrar histórico de humor" class="w-8 h-8 shrink-0 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-indigo-100 hover:text-indigo-600 transition-colors">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <p id="mood-selected-label" class="text-xs text-slate-500 mb-3">Como você está hoje?</p>
+                <div id="mood-options" class="grid grid-cols-6 gap-1.5" role="group" aria-label="Escolha seu humor de hoje"></div>
+                <button id="confirm-mood" type="button" class="mt-4 w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm shadow-indigo-200 hover:bg-indigo-700 transition-colors">Confirmar humor</button>
+                <p id="mood-feedback" class="mt-2 text-center text-[10px] font-semibold text-emerald-600 min-h-4" aria-live="polite"></p>
+
+                <div id="mood-history" class="hidden mt-5 border-t border-slate-100 pt-5" aria-hidden="true">
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-800">Últimos 30 dias</h4>
+                            <p class="text-[10px] text-slate-400">Clique apenas em hoje para alterar</p>
+                        </div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Calendário</span>
+                    </div>
+                    <div class="grid grid-cols-7 gap-1 text-center text-[9px] font-bold uppercase text-slate-400 mb-1">
+                        <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+                    </div>
+                    <div id="mood-calendar" class="grid grid-cols-7 gap-1"></div>
+                </div>
+            </div>
+        </div>
+
+        <section class="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
+            <div class="mb-4 flex items-center justify-between"><h3 id="dashboard-service-title" role="button" tabindex="0" class="flex cursor-pointer items-center gap-2 text-sm font-black uppercase tracking-widest text-slate-800"><i data-lucide="users" class="h-4 w-4 text-indigo-500"></i> Últimos atendimentos</h3><button type="button" id="open-service-from-dashboard" class="text-[10px] font-black uppercase tracking-wider text-indigo-500">Ver detalhes</button></div>
+            <div id="dashboard-service-summary" class="grid gap-2 md:grid-cols-3"></div>
+        </section>
+
+        <section class="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
+            <div class="mb-4 flex items-center justify-between"><h3 id="dashboard-conditional-title" role="button" tabindex="0" class="flex cursor-pointer items-center gap-2 text-sm font-black uppercase tracking-widest text-slate-800"><i data-lucide="rotate-ccw" class="h-4 w-4 text-indigo-500"></i> Condicionais em aberto</h3><button type="button" id="open-conditional-from-dashboard" class="text-[10px] font-black uppercase tracking-wider text-indigo-500">Ver detalhes</button></div>
+            <div id="dashboard-conditional-summary" class="grid gap-2 md:grid-cols-3"></div>
+        </section>
+
+        <!-- RANKING SIMPLIFICADO -->
+        <section class="bg-slate-50 p-8 rounded-[3rem] border border-slate-100">
+            <h3 class="text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-8">Ranking Semanal</h3>
+            <div class="flex justify-center items-end gap-3 max-w-xs mx-auto">
+                <!-- 2º -->
+                <div class="flex flex-col items-center flex-1">
+                    <img src="https://ui-avatars.com/api/?name=Ana+M&background=e2e8f0" class="w-10 h-10 rounded-full border-2 border-white mb-2 shadow-sm">
+                    <div class="w-full h-16 bg-slate-200 rounded-t-2xl flex items-center justify-center font-black text-white text-xl">2</div>
+                </div>
+                <!-- 1º -->
+                <div class="flex flex-col items-center flex-1">
+                    <div class="relative">
+                        <i data-lucide="crown" class="w-5 h-5 text-yellow-500 absolute -top-4 left-1/2 -translate-x-1/2"></i>
+                        <img src="https://ui-avatars.com/api/?name=Pedro+L&background=fef3c7" class="w-14 h-14 rounded-full border-4 border-yellow-400 mb-2 shadow-md">
+                    </div>
+                    <div class="w-full h-24 bg-yellow-400 rounded-t-2xl flex items-center justify-center font-black text-white text-3xl">1</div>
+                </div>
+                <!-- 3º (VOCÊ) -->
+                <div class="flex flex-col items-center flex-1">
+                    <img src="https://ui-avatars.com/api/?name=Carlos+S&background=6366f1&color=fff" class="w-10 h-10 rounded-full border-2 border-indigo-400 mb-2 shadow-sm">
+                    <div class="w-full h-12 bg-indigo-600 rounded-t-2xl flex items-center justify-center font-black text-white text-xl uppercase">3</div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- TELA DE TAREFAS -->
+    <section id="tasks-page" class="hidden max-w-5xl mx-auto p-4 space-y-6">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+                <div class="flex items-center gap-3"><button type="button" data-back-dashboard aria-label="Voltar ao início" class="hidden h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 md:flex"><i data-lucide="arrow-left" class="h-4 w-4"></i></button><h2 class="text-2xl font-black text-slate-800">Tarefas</h2></div>
+                <p class="mt-1 text-xs font-medium text-slate-500">Ordenadas por urgência</p>
+            </div>
+            <div class="flex items-end gap-2">
+                <div class="min-w-0">
+                    <p class="mb-1 text-[10px] font-black uppercase tracking-wider text-slate-400">Selecionar data</p>
+                    <div id="task-date-carousel" class="date-carousel flex max-w-[min(78vw,440px)] snap-x snap-mandatory gap-2 overflow-x-auto pb-1"></div>
+                </div>
+                <button type="button" id="open-task-calendar" aria-label="Escolher data no calendário" title="Escolher data" class="mb-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600">
+                    <i data-lucide="calendar-days" class="h-5 w-5"></i>
+                </button>
+                <input id="task-date-selector" type="date" class="sr-only" tabindex="-1" aria-hidden="true">
+            </div>
+        </div>
+        <div id="tasks-list" class="space-y-3"></div>
+    </section>
+
+    <!-- TELA DE VENDAS -->
+    <section id="sales-page" class="hidden max-w-5xl mx-auto p-4 space-y-6">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div><div class="flex items-center gap-3"><button type="button" data-back-dashboard aria-label="Voltar ao início" class="hidden h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 md:flex"><i data-lucide="arrow-left" class="h-4 w-4"></i></button><h2 class="text-2xl font-black text-slate-800">Minhas Vendas</h2></div><p id="sales-period-label" class="mt-1 text-xs font-medium text-slate-500">Resumo do dia</p></div>
+            <div class="flex rounded-xl bg-slate-100 p-1">
+                <button type="button" data-sales-period="day" class="sales-period-button rounded-lg bg-white px-3 py-2 text-[10px] font-black text-indigo-600 shadow-sm">Dia</button>
+                <button type="button" data-sales-period="week" class="sales-period-button rounded-lg px-3 py-2 text-[10px] font-black text-slate-400">Semana</button>
+                <button type="button" data-sales-period="month" class="sales-period-button rounded-lg px-3 py-2 text-[10px] font-black text-slate-400">Mês</button>
+            </div>
+        </div>
+        <div class="rounded-[2rem] bg-indigo-600 p-6 text-white shadow-lg shadow-indigo-100"><p class="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-100">Volume de vendas</p><p id="sales-total" class="mt-2 text-4xl font-black">R$ 0,00</p><p id="sales-count" class="mt-1 text-xs font-semibold text-indigo-100">0 registros</p></div>
+        <div class="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+            <div id="sales-date-carousel" class="date-carousel flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1"></div>
+            <div id="sales-week-days" class="mt-3 hidden grid gap-3 md:grid-cols-2">
+                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Início da semana
+                    <span class="mt-1 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3"><input id="sales-week-start" type="date" class="w-full border-0 px-0 py-2 text-sm font-bold text-slate-700 outline-none"><i data-lucide="calendar-days" class="h-4 w-4 text-indigo-500"></i></span>
+                </label>
+                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Fim da semana
+                    <span class="mt-1 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3"><input id="sales-week-end" type="date" class="w-full border-0 px-0 py-2 text-sm font-bold text-slate-700 outline-none"><i data-lucide="calendar-days" class="h-4 w-4 text-indigo-500"></i></span>
+                </label>
+            </div>
+            <label id="sales-month-picker" class="mt-3 hidden text-[10px] font-black uppercase tracking-wider text-slate-400">Mês de referência
+                <span id="sales-month-label" class="mt-1 block text-sm font-black capitalize text-indigo-600"></span><input id="sales-month-selector" type="month" class="sr-only" tabindex="-1" aria-hidden="true">
+            </label>
+        </div>
+        <section class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+            <div class="mb-4 flex items-center justify-between"><h3 class="text-sm font-black uppercase tracking-wider text-slate-800">Produtos mais vendidos</h3><span class="text-[10px] font-bold text-slate-400">Quantidade</span></div>
+            <div id="sales-products-report" class="space-y-2"></div>
+        </section>
+        <div id="sales-list" class="space-y-3"></div>
+    </section>
+
+    <!-- TELA DE ATENDIMENTOS -->
+    <section id="service-page" class="hidden max-w-5xl mx-auto p-4 space-y-6">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"><div><div class="flex items-center gap-3"><button type="button" data-back-dashboard aria-label="Voltar ao início" class="hidden h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 md:flex"><i data-lucide="arrow-left" class="h-4 w-4"></i></button><h2 class="text-2xl font-black text-slate-800">Meus Atendimentos</h2></div><p id="service-period-label" class="mt-1 text-xs font-medium text-slate-500">Resumo do dia</p></div><div class="flex rounded-xl bg-slate-100 p-1"><button type="button" data-service-period="day" class="service-period-button rounded-lg bg-white px-3 py-2 text-[10px] font-black text-indigo-600 shadow-sm">Dia</button><button type="button" data-service-period="week" class="service-period-button px-3 py-2 text-[10px] font-black text-slate-400">Semana</button><button type="button" data-service-period="month" class="service-period-button px-3 py-2 text-[10px] font-black text-slate-400">Mês</button></div></div>
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-6"><div class="rounded-2xl bg-indigo-600 p-4 text-white"><p class="text-[9px] font-black uppercase">Atendimentos</p><p id="service-total" class="mt-1 text-2xl font-black">0</p></div><div class="rounded-2xl bg-emerald-500 p-4 text-white"><p class="text-[9px] font-black uppercase">Conversões</p><p id="service-conversions" class="mt-1 text-2xl font-black">0</p></div><div class="rounded-2xl bg-amber-400 p-4 text-white"><p class="text-[9px] font-black uppercase">Conversão</p><p id="service-rate" class="mt-1 text-2xl font-black">0%</p></div><div class="rounded-2xl bg-sky-500 p-4 text-white"><p class="text-[9px] font-black uppercase">Condicionais</p><p id="service-conditional" class="mt-1 text-2xl font-black">0</p></div><div class="rounded-2xl bg-cyan-600 p-4 text-white"><p class="text-[9px] font-black uppercase">Permitidas</p><p id="service-authorized" class="mt-1 text-2xl font-black">0</p></div><div class="rounded-2xl bg-slate-800 p-4 text-white"><p class="text-[9px] font-black uppercase">Não convertidos</p><p id="service-no-sale" class="mt-1 text-2xl font-black">0</p></div></div>
+        <div class="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"><div id="service-date-carousel" class="date-carousel flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1"></div><div id="service-week-range" class="mt-3 hidden grid gap-3 md:grid-cols-2"><label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Início da semana<span class="mt-1 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3"><input id="service-week-start" type="date" class="w-full border-0 px-0 py-2 text-sm font-bold text-slate-700 outline-none"><i data-lucide="calendar-days" class="h-4 w-4 text-indigo-500"></i></span></label><label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Fim da semana<span class="mt-1 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3"><input id="service-week-end" type="date" class="w-full border-0 px-0 py-2 text-sm font-bold text-slate-700 outline-none"><i data-lucide="calendar-days" class="h-4 w-4 text-indigo-500"></i></span></label></div></div>
+        <section class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm"><h3 class="mb-3 text-sm font-black uppercase tracking-wider text-slate-800">Top 3 produtos não vendidos</h3><div id="service-unconverted-report" class="grid gap-2 md:grid-cols-3"></div></section>
+        <section class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm"><h3 class="mb-3 text-sm font-black uppercase tracking-wider text-slate-800">Motivos e oportunidades</h3><div id="service-reasons-report" class="grid gap-2 md:grid-cols-2"></div></section>
+        <div id="service-list" class="space-y-3"></div>
+    </section>
+
+    <!-- TELA DE CONDICIONAIS -->
+    <section id="conditional-page" class="hidden max-w-5xl mx-auto p-4 space-y-6">
+        <div class="flex items-center gap-3"><button type="button" data-back-dashboard aria-label="Voltar ao início" class="hidden h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 md:flex"><i data-lucide="arrow-left" class="h-4 w-4"></i></button><div><h2 class="text-2xl font-black text-slate-800">Condicionais</h2><p class="mt-1 text-xs font-medium text-slate-500">Produtos levados sem compra confirmada</p></div></div>
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-3"><div class="rounded-2xl bg-indigo-600 p-4 text-white"><p class="text-[9px] font-black uppercase">Em aberto</p><p id="conditional-open-count" class="mt-1 text-2xl font-black">0</p></div><div class="rounded-2xl bg-emerald-500 p-4 text-white"><p class="text-[9px] font-black uppercase">Devolvidas/Compradas</p><p id="conditional-resolved-count" class="mt-1 text-2xl font-black">0</p></div><div class="rounded-2xl bg-red-500 p-4 text-white"><p class="text-[9px] font-black uppercase">Prazo vencido</p><p id="conditional-overdue-count" class="mt-1 text-2xl font-black">0</p></div></div>
+        <div id="conditional-list" class="space-y-3"></div>
+    </section>
+
+    <!-- FAB -->
+    <button id="fab-button" class="fixed bottom-24 right-6 md:bottom-10 md:right-10 w-16 h-16 bg-indigo-600 text-white rounded-full flex items-center justify-center shadow-2xl shadow-indigo-300 hover:scale-110 active:scale-95 transition-all z-50">
+        <i data-lucide="plus" class="w-8 h-8"></i>
+    </button>
+
+    <!-- MODAL DE NOVA TAREFA -->
+    <div id="new-task-modal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="new-task-title">
+        <div class="w-full max-w-md overflow-hidden rounded-[2rem] bg-white shadow-2xl">
+            <div class="flex items-start justify-between border-b border-slate-100 p-5">
+                <div>
+                    <p class="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500">Nova tarefa</p>
+                    <h2 id="new-task-title" class="mt-1 text-lg font-black text-slate-800">Adicionar tarefa</h2>
+                </div>
+                <button type="button" id="close-new-task" aria-label="Fechar" class="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <form id="new-task-form" class="p-5 space-y-3">
+                <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Tarefa
+                    <input id="new-task-title-input" required maxlength="80" placeholder="Ex.: Retornar orçamento" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-700 outline-none focus:border-indigo-400">
+                </label>
+                <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Horário
+                    <input id="new-task-time-input" required type="time" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-700 outline-none focus:border-indigo-400">
+                </label>
+                <label class="flex items-center gap-2 text-xs font-bold text-slate-600">
+                    <input id="task-repeat-toggle" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-indigo-600">
+                    Repetir tarefa
+                </label>
+                <div id="task-repeat-options" class="hidden rounded-xl bg-slate-50 p-3">
+                    <p class="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Repetir toda semana em</p>
+                    <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-500">
+                        <label><input type="checkbox" value="0" class="task-repeat-day sr-only"><span class="block cursor-pointer rounded-lg border border-slate-200 bg-white px-1 py-2">Dom</span></label>
+                        <label><input type="checkbox" value="1" class="task-repeat-day sr-only"><span class="block cursor-pointer rounded-lg border border-slate-200 bg-white px-1 py-2">Seg</span></label>
+                        <label><input type="checkbox" value="2" class="task-repeat-day sr-only"><span class="block cursor-pointer rounded-lg border border-slate-200 bg-white px-1 py-2">Ter</span></label>
+                        <label><input type="checkbox" value="3" class="task-repeat-day sr-only"><span class="block cursor-pointer rounded-lg border border-slate-200 bg-white px-1 py-2">Qua</span></label>
+                        <label><input type="checkbox" value="4" class="task-repeat-day sr-only"><span class="block cursor-pointer rounded-lg border border-slate-200 bg-white px-1 py-2">Qui</span></label>
+                        <label><input type="checkbox" value="5" class="task-repeat-day sr-only"><span class="block cursor-pointer rounded-lg border border-slate-200 bg-white px-1 py-2">Sex</span></label>
+                        <label><input type="checkbox" value="6" class="task-repeat-day sr-only"><span class="block cursor-pointer rounded-lg border border-slate-200 bg-white px-1 py-2">Sáb</span></label>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-4">
+                    <button type="button" id="cancel-new-task" class="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-500 hover:bg-slate-100">Cancelar</button>
+                    <button type="submit" class="rounded-xl bg-emerald-500 px-5 py-2.5 text-xs font-bold text-white hover:bg-emerald-600">Adicionar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="new-sale-modal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="new-sale-title">
+        <div class="w-full max-w-md overflow-hidden rounded-[2rem] bg-white shadow-2xl">
+            <div class="flex items-start justify-between border-b border-slate-100 p-5"><div><p class="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500">Nova venda</p><h2 id="new-sale-title" class="mt-1 text-lg font-black text-slate-800">Registrar venda</h2></div><button type="button" id="close-new-sale" aria-label="Fechar" class="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-500"><i data-lucide="x" class="w-4 h-4"></i></button></div>
+            <form id="new-sale-form" class="space-y-3 p-5">
+                <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Cliente (opcional)<input id="sale-client-input" maxlength="100" placeholder="Nome do cliente" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-700 outline-none focus:border-indigo-400"></label>
+                <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Valor da venda<input id="sale-value-input" required type="number" min="0.01" step="0.01" placeholder="0,00" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-700 outline-none focus:border-indigo-400"></label>
+                <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Data e horário<input id="sale-datetime-input" required type="datetime-local" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-700 outline-none focus:border-indigo-400"></label>
+                <div>
+                    <p class="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Produtos vendidos</p>
+                    <div id="sale-product-options" class="grid max-h-52 grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3"></div>
+                    <p id="sale-product-feedback" class="mt-2 min-h-4 text-[10px] font-semibold text-red-500"></p>
+                </div>
+                <div class="flex justify-end gap-2 pt-4"><button type="button" id="cancel-new-sale" class="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-500">Cancelar</button><button type="submit" class="rounded-xl bg-emerald-500 px-5 py-2.5 text-xs font-bold text-white">Registrar</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div id="conditional-modal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="conditional-title">
+        <div class="w-full max-w-xl overflow-hidden rounded-[2rem] bg-white shadow-2xl"><div class="flex items-start justify-between border-b border-slate-100 p-5"><div><p class="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500">Condicional</p><h2 id="conditional-title" class="mt-1 text-lg font-black text-slate-800">Registrar condicional</h2></div><button type="button" id="close-conditional" aria-label="Fechar" class="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-500"><i data-lucide="x" class="w-4 h-4"></i></button></div>
+            <form id="conditional-form" class="max-h-[78vh] space-y-3 overflow-y-auto p-5">
+                <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Cliente<input id="conditional-client" required maxlength="100" placeholder="Nome do cliente" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"></label>
+                <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Telefone<input id="conditional-phone" required type="tel" placeholder="(11) 91234-5678" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"></label>
+                <div><p class="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Produtos levados</p><div id="conditional-product-options" class="grid max-h-44 grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3"></div><p id="conditional-product-feedback" class="mt-2 min-h-4 text-[10px] font-semibold text-red-500"></p></div>
+                <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Observação (opcional)<input id="conditional-observation" placeholder="Detalhes da condicional" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"></label>
+                <div class="rounded-xl bg-slate-50 p-3"><p class="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Tarefa de cobrança (obrigatória)</p><div class="grid gap-3 sm:grid-cols-2"><label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Data<input id="conditional-task-date" required type="date" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"></label><label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Horário<input id="conditional-task-time" required type="time" value="10:00" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"></label></div><p class="mt-2 text-[10px] text-slate-400">Sugestão automática: dia seguinte, dentro do horário comercial. Ajuste se cair em feriado ou fim de semana.</p></div>
+                <div class="flex justify-end gap-2 pt-3"><button type="button" id="cancel-conditional" class="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-500">Cancelar</button><button type="submit" class="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white">Salvar condicional</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div id="service-modal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="service-title">
+        <div class="w-full max-w-xl overflow-hidden rounded-[2rem] bg-white shadow-2xl"><div class="flex items-start justify-between border-b border-slate-100 p-5"><div><p class="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500">Atendimento</p><h2 id="service-title" class="mt-1 text-lg font-black text-slate-800">Registrar atendimento</h2></div><button type="button" id="close-service" aria-label="Fechar" class="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-500"><i data-lucide="x" class="w-4 h-4"></i></button></div>
+            <form id="service-form" class="max-h-[78vh] space-y-3 overflow-y-auto p-5"><label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Cliente (opcional)<input id="service-client" maxlength="100" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"></label><label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">O que aconteceu?<select id="service-outcome" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"><option value="converted">Venda realizada</option><option value="conditional">Levou condicional</option><option value="authorized">Venda permitida / aguardando fechamento</option><option value="no-product">Não tínhamos o produto</option><option value="just-looking">Só estava olhando</option><option value="expensive">Achou caro</option><option value="no-decision">Não tomou decisão</option><option value="competitor">Preferiu a concorrência</option><option value="return-later">Vai voltar depois</option><option value="other">Outro motivo</option></select></label><div id="service-sale-fields" class="space-y-3"><label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Valor da venda<input id="service-value" type="number" min="0.01" step="0.01" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"></label><div><p class="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Produtos vendidos</p><div id="service-product-options" class="grid max-h-44 grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3"></div></div></div><div id="service-conditional-fields" class="hidden space-y-3"><label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Telefone do cliente<input id="service-phone" type="tel" placeholder="(11) 91234-5678" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"></label><div><p class="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Produtos levados na condicional</p><div id="service-conditional-products" class="grid max-h-44 grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3"></div><p id="service-conditional-product-feedback" class="mt-2 min-h-4 text-[10px] font-semibold text-red-500"></p></div><div class="rounded-xl bg-slate-50 p-3"><p class="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Tarefa de cobrança (obrigatória)</p><div class="grid gap-3 sm:grid-cols-2"><label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Data<input id="service-conditional-task-date" type="date" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"></label><label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Horário<input id="service-conditional-task-time" type="time" value="10:00" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"></label></div><p class="mt-2 text-[10px] text-slate-400">Sugestão automática: dia seguinte, dentro do horário comercial. Ajuste se cair em feriado ou fim de semana.</p></div></div><div id="service-reason-fields" class="hidden space-y-3"><label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Produto, tamanho ou detalhe procurado (opcional)<input id="service-demand" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"></label><div><p class="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Produtos que o cliente olhou ou queria</p><div id="service-shown-products" class="grid max-h-44 grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3"></div></div></div><label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Observações<input id="service-notes" placeholder="Registre detalhes importantes do atendimento" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none focus:border-indigo-400"></label><div class="flex justify-end gap-2 pt-3"><button type="button" id="cancel-service" class="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-500">Cancelar</button><button type="submit" class="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white">Salvar atendimento</button></div></form>
+        </div>
+    </div>
+
+    <!-- VISÃO GERAL DO GERENTE -->
+    <section id="manager-overview-page" class="hidden max-w-5xl mx-auto p-4 space-y-6">
+        <div class="flex items-center gap-3"><button type="button" data-back-dashboard aria-label="Voltar ao início" class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600"><i data-lucide="arrow-left" class="h-4 w-4"></i></button><div><h2 class="text-2xl font-black text-slate-800">Visão geral de tarefas</h2><p class="mt-1 text-xs font-medium text-slate-500">Todas as tarefas da equipe, com o nome do vendedor</p></div></div>
+        <div id="manager-overview-list" class="space-y-3"></div>
+    </section>
+
+    <!-- NAV MOBILE -->
+    <nav id="mobile-navigation" class="md:hidden fixed inset-x-0 bottom-0 z-[60] h-20 w-full bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl border-t border-slate-100 flex items-center justify-around px-4">
+        <div class="nav-indicator" id="nav-indicator" style="width: 20%; left: 0;"></div>
+        <button type="button" id="nav-inicio" class="flex flex-col items-center gap-1 text-indigo-600 flex-1 relative z-10 py-1 transition-colors">
+            <i data-lucide="layout-grid" class="w-6 h-6"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest">Início</span>
+        </button>
+        <button type="button" id="nav-service" class="flex flex-col items-center gap-1 text-slate-300 flex-1 relative z-10 py-1 transition-colors"><i data-lucide="users" class="w-6 h-6"></i><span class="text-[9px] font-black uppercase tracking-widest">Atend.</span></button>
+        <button type="button" id="nav-sales" class="flex flex-col items-center gap-1 text-slate-300 flex-1 relative z-10 py-1 transition-colors">
+            <i data-lucide="shopping-bag" class="w-6 h-6"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest">Vendas</span>
+        </button>
+        <button type="button" id="nav-tasks" class="flex flex-col items-center gap-1 text-slate-300 flex-1 relative z-10 py-1 transition-colors">
+            <i data-lucide="check-square" class="w-6 h-6"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest">Tarefas</span>
+        </button>
+        <button type="button" id="nav-conditional" class="flex flex-col items-center gap-1 text-slate-300 flex-1 relative z-10 py-1 transition-colors">
+            <i data-lucide="rotate-ccw" class="w-6 h-6"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest">Condic.</span>
+        </button>
+    </nav>
+
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // ================= AUTENTICAÇÃO E MULTI-LOJA =================
+        const MASTER_CREDENTIALS = { email: 'admin@siga.com', password: 'admin123' };
+        const lojasStorageKey = 'siga-lojas';
+        const usuariosStorageKey = 'siga-usuarios';
+        const sessionStorageName = 'siga-sessao';
+
+        function slugify(text) {
+            return String(text || '').toLowerCase().trim()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-+|-+$)/g, '') || 'item';
+        }
+
+        function uniqueSlugFor(list, base) {
+            const slug = slugify(base);
+            let attempt = slug;
+            let counter = 2;
+            while (list.some(item => item.slug === attempt)) { attempt = `${slug}-${counter}`; counter += 1; }
+            return attempt;
+        }
+
+        function getLojas() {
+            try { const saved = JSON.parse(localStorage.getItem(lojasStorageKey)); return Array.isArray(saved) ? saved : []; } catch (error) { return []; }
+        }
+        function saveLojas(list) { localStorage.setItem(lojasStorageKey, JSON.stringify(list)); }
+
+        function getUsuarios() {
+            try { const saved = JSON.parse(localStorage.getItem(usuariosStorageKey)); return Array.isArray(saved) ? saved : []; } catch (error) { return []; }
+        }
+        function saveUsuarios(list) { localStorage.setItem(usuariosStorageKey, JSON.stringify(list)); }
+
+        function accessLinkFor(usuario) {
+            return `${location.origin}${location.pathname}#acesso/${usuario.fullSlug}`;
+        }
+
+        function copyTextRobust(text, callback) {
+            if (navigator.clipboard?.writeText) {
+                navigator.clipboard.writeText(text).then(() => callback(true)).catch(() => fallbackCopy(text, callback));
+                return;
+            }
+            fallbackCopy(text, callback);
+        }
+
+        function fallbackCopy(text, callback) {
+            const input = document.createElement('textarea');
+            input.value = text;
+            input.style.position = 'fixed';
+            input.style.opacity = '0';
+            document.body.appendChild(input);
+            input.focus();
+            input.select();
+            let success = false;
+            try { success = document.execCommand('copy'); } catch (error) { success = false; }
+            document.body.removeChild(input);
+            callback(success);
+        }
+
+        function getSession() {
+            try { return JSON.parse(localStorage.getItem(sessionStorageName)); } catch (error) { return null; }
+        }
+        function saveSession(session) { localStorage.setItem(sessionStorageName, JSON.stringify(session)); }
+        function clearSession() { localStorage.removeItem(sessionStorageName); }
+
+        function effectiveUserId() {
+            const session = getSession();
+            if (!session || session.type !== 'user') return null;
+            return session.viewingUserId || session.userId;
+        }
+
+        function scopedKey(base) {
+            const uid = effectiveUserId();
+            return uid ? `${base}::${uid}` : base;
+        }
+
+        function hideAllViews() {
+            ['view-landing', 'view-master-login', 'view-pessoa-login'].forEach(id => {
+                const el = document.getElementById(id);
+                el.classList.add('hidden');
+                el.classList.remove('flex');
+            });
+            document.getElementById('view-master-panel').classList.add('hidden');
+            document.getElementById('app-shell').classList.add('hidden');
+        }
+
+        function showFlexView(id) {
+            hideAllViews();
+            const el = document.getElementById(id);
+            el.classList.remove('hidden');
+            el.classList.add('flex');
+        }
+
+        let appStarted = false;
+        let selectedLojaId = null;
+
+        function applyRoute() {
+            const hash = location.hash.replace(/^#/, '');
+            const session = getSession();
+
+            if (hash.startsWith('acesso/')) {
+                showPersonLogin(hash.slice('acesso/'.length).trim());
+                return;
+            }
+            if (hash === 'master-login') {
+                if (session?.type === 'master') { location.hash = 'master'; return; }
+                showFlexView('view-master-login');
+                return;
+            }
+            if (hash === 'master') {
+                if (session?.type !== 'master') { location.hash = 'master-login'; return; }
+                hideAllViews();
+                document.getElementById('view-master-panel').classList.remove('hidden');
+                renderMasterPanel();
+                return;
+            }
+            if (hash === 'app' || hash === 'manager-overview') {
+                if (session?.type !== 'user') { location.hash = ''; return; }
+                if (hash === 'manager-overview' && session.role !== 'gerente') { location.hash = 'app'; return; }
+                hideAllViews();
+                document.getElementById('app-shell').classList.remove('hidden');
+                startAppIfNeeded();
+                renderManagerBar();
+                if (hash === 'manager-overview') showPage('manager-overview');
+                return;
+            }
+            if (session?.type === 'master') { location.hash = 'master'; return; }
+            if (session?.type === 'user') { location.hash = 'app'; return; }
+            showFlexView('view-landing');
+        }
+
+        function showPersonLogin(fullSlug) {
+            const usuario = getUsuarios().find(item => item.fullSlug === fullSlug);
+            const loja = usuario ? getLojas().find(item => item.id === usuario.lojaId) : null;
+            showFlexView('view-pessoa-login');
+            const form = document.getElementById('pessoa-login-form');
+            form.dataset.fullSlug = fullSlug;
+            document.getElementById('pessoa-login-error').textContent = '';
+            if (usuario && loja) {
+                document.getElementById('pessoa-login-title').textContent = loja.name;
+                document.getElementById('pessoa-login-subtitle').textContent = `Acesso de ${usuario.role === 'gerente' ? 'gerente' : 'vendedor'}: ${usuario.name}`;
+            } else {
+                document.getElementById('pessoa-login-title').textContent = 'Link inválido';
+                document.getElementById('pessoa-login-subtitle').textContent = 'Verifique o link com o administrador da loja.';
+            }
+        }
+
+        function startAppIfNeeded() {
+            if (appStarted) { refreshAllAppViews(); return; }
+            appStarted = true;
+            initTasks();
+            initMoodCard();
+            bindManagerBar();
+            document.getElementById('app-logout').addEventListener('click', () => { clearSession(); location.href = location.pathname; });
+        }
+
+        function refreshAllAppViews() {
+            showPage('dashboard');
+            renderDashboardSales();
+            refreshMoodCard();
+        }
+
+        function currentTaskOwnerRole() {
+            const session = getSession();
+            return session?.role === 'gerente' ? 'manager' : 'user';
+        }
+
+        function renderManagerBar() {
+            const bar = document.getElementById('manager-bar');
+            const label = document.getElementById('session-user-label');
+            const session = getSession();
+            label.classList.remove('hidden');
+            label.textContent = session?.name ? `${session.name}${session.role === 'gerente' ? ' · Gerente' : ''}` : '';
+            if (!session || session.type !== 'user' || session.role !== 'gerente') { bar.classList.add('hidden'); return; }
+            bar.classList.remove('hidden');
+            const vendedores = getUsuarios().filter(item => item.lojaId === session.lojaId && item.role === 'vendedor');
+            const select = document.getElementById('manager-vendor-select');
+            const currentViewing = session.viewingUserId || session.userId;
+            select.innerHTML = `<option value="${session.userId}">Minha visão (Gerente)</option>` + vendedores.map(vendedor => `<option value="${vendedor.id}">${escapeHtml(vendedor.name)}</option>`).join('');
+            select.value = currentViewing;
+            document.getElementById('manager-bar-label').textContent = currentViewing === session.userId ? 'Visualizando: minha própria conta' : `Visualizando: ${escapeHtml(vendedores.find(item => item.id === currentViewing)?.name || '')}`;
+        }
+
+        function bindManagerBar() {
+            document.getElementById('manager-vendor-select').addEventListener('change', event => {
+                const session = getSession();
+                session.viewingUserId = event.target.value === session.userId ? null : event.target.value;
+                saveSession(session);
+                renderManagerBar();
+                refreshAllAppViews();
+            });
+            document.getElementById('manager-overview-button').addEventListener('click', () => showPage('manager-overview'));
+        }
+
+        function isTaskOverdueRaw(task, now) {
+            const [hours, minutes] = task.time.split(':').map(Number);
+            return hours < now.getHours() || (hours === now.getHours() && minutes < now.getMinutes());
+        }
+
+        function collectAllTasksForStore(lojaId) {
+            const vendedores = getUsuarios().filter(item => item.lojaId === lojaId);
+            const merged = [];
+            vendedores.forEach(vendedor => {
+                let tasks = [];
+                try { tasks = JSON.parse(localStorage.getItem(`siga-tarefas::${vendedor.id}`)) || []; } catch (error) { tasks = []; }
+                tasks.forEach(task => merged.push({ ...task, vendedorNome: vendedor.name }));
+            });
+            const now = new Date();
+            return merged.sort((first, second) => {
+                if (first.completed !== second.completed) return first.completed ? 1 : -1;
+                const firstOverdue = !first.completed && isTaskOverdueRaw(first, now);
+                const secondOverdue = !second.completed && isTaskOverdueRaw(second, now);
+                if (firstOverdue !== secondOverdue) return firstOverdue ? -1 : 1;
+                return first.time.localeCompare(second.time);
+            });
+        }
+
+        function renderManagerOverview() {
+            const session = getSession();
+            const tasks = collectAllTasksForStore(session.lojaId);
+            document.getElementById('manager-overview-list').innerHTML = tasks.length ? tasks.map(task => `
+                <article class="flex items-center gap-3 rounded-2xl border p-3 ${task.completed ? 'border-emerald-200 bg-emerald-50' : 'border-slate-100 bg-white'}">
+                    <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border-2 ${task.completed ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-indigo-200 bg-white'}">${task.completed ? '<i data-lucide="check" class="w-4 h-4"></i>' : ''}</div>
+                    <div class="min-w-0 flex-1">
+                        <p class="truncate text-xs font-bold ${task.completed ? 'text-emerald-800 line-through' : 'text-slate-700'}">${escapeHtml(task.title)}</p>
+                        <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-semibold text-slate-400">
+                            <span class="flex items-center gap-1"><i data-lucide="clock-3" class="w-3 h-3"></i>${task.time}</span>
+                            <span class="rounded-full bg-indigo-50 px-2 py-0.5 text-indigo-600">${escapeHtml(task.vendedorNome)}</span>
+                            <span>${task.owner === 'manager' ? 'Gerente' : 'Vendedor'}</span>
+                        </div>
+                    </div>
+                </article>
+            `).join('') : '<p class="rounded-2xl bg-white p-4 text-xs text-slate-400">Nenhuma tarefa registrada pela equipe.</p>';
+            lucide.createIcons();
+        }
+
+        function renderMasterPanel() {
+            const lojas = getLojas();
+            document.getElementById('loja-list').innerHTML = lojas.length ? lojas.map(loja => {
+                const equipe = getUsuarios().filter(item => item.lojaId === loja.id);
+                return `<div class="flex items-center justify-between rounded-xl border border-slate-100 p-3">
+                    <div><p class="text-sm font-bold text-slate-700">${escapeHtml(loja.name)}</p><p class="text-[10px] text-slate-400">${equipe.length} pessoa${equipe.length === 1 ? '' : 's'} cadastrada${equipe.length === 1 ? '' : 's'}</p></div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" data-manage-loja="${loja.id}" class="rounded-lg bg-indigo-50 px-3 py-1.5 text-[10px] font-black text-indigo-600 hover:bg-indigo-100">Gerenciar equipe</button>
+                        <button type="button" data-delete-loja="${loja.id}" aria-label="Excluir loja" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
+                    </div>
+                </div>`;
+            }).join('') : '<p class="text-xs text-slate-400">Nenhuma loja cadastrada ainda.</p>';
+            lucide.createIcons();
+            if (selectedLojaId) renderLojaTeam(selectedLojaId);
+        }
+
+        function renderLojaTeam(lojaId) {
+            selectedLojaId = lojaId;
+            const loja = getLojas().find(item => item.id === lojaId);
+            if (!loja) { document.getElementById('loja-team-section').classList.add('hidden'); return; }
+            document.getElementById('loja-team-section').classList.remove('hidden');
+            document.getElementById('loja-team-title').textContent = `Equipe de ${loja.name}`;
+            const equipe = getUsuarios().filter(item => item.lojaId === lojaId);
+            document.getElementById('usuario-list').innerHTML = equipe.length ? equipe.map(usuario => `
+                <div class="rounded-xl border border-slate-100 p-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <div><p class="text-sm font-bold text-slate-700">${escapeHtml(usuario.name)} <span class="ml-1 rounded-full ${usuario.role === 'gerente' ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-600'} px-2 py-0.5 text-[9px] font-black uppercase">${usuario.role === 'gerente' ? 'Gerente' : 'Vendedor'}</span></p><p class="text-[10px] text-slate-400">Login: ${escapeHtml(usuario.username)}</p></div>
+                        <div class="flex items-center gap-1">
+                            <button type="button" data-edit-usuario="${usuario.id}" aria-label="Editar acesso" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50 hover:text-indigo-600"><i data-lucide="pencil" class="h-4 w-4"></i></button>
+                            <button type="button" data-delete-usuario="${usuario.id}" aria-label="Excluir acesso" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50 hover:text-red-600"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
+                        </div>
+                    </div>
+                    <div class="mt-2 flex items-center gap-2 rounded-lg bg-slate-50 px-2 py-1.5"><input type="text" readonly value="${escapeHtml(accessLinkFor(usuario))}" onclick="this.select()" class="min-w-0 flex-1 truncate bg-transparent text-[10px] font-semibold text-slate-500 outline-none"><button type="button" data-copy-link="${escapeHtml(accessLinkFor(usuario))}" class="shrink-0 text-[10px] font-black text-indigo-500 hover:text-indigo-700">Copiar</button></div>
+                </div>
+            `).join('') : '<p class="text-xs text-slate-400">Nenhum acesso cadastrado para esta loja.</p>';
+            lucide.createIcons();
+        }
+
+        function bindAuthForms() {
+            document.getElementById('master-login-form').addEventListener('submit', event => {
+                event.preventDefault();
+                const email = document.getElementById('master-email-input').value.trim();
+                const password = document.getElementById('master-password-input').value;
+                if (email !== MASTER_CREDENTIALS.email || password !== MASTER_CREDENTIALS.password) {
+                    document.getElementById('master-login-error').textContent = 'Credenciais inválidas.';
+                    return;
+                }
+                saveSession({ type: 'master' });
+                location.hash = 'master';
+            });
+
+            document.getElementById('pessoa-login-form').addEventListener('submit', event => {
+                event.preventDefault();
+                const fullSlug = String(event.target.dataset.fullSlug || '').trim();
+                const usuario = getUsuarios().find(item => item.fullSlug === fullSlug);
+                const username = document.getElementById('pessoa-username-input').value.trim();
+                const password = document.getElementById('pessoa-password-input').value;
+                if (!usuario || usuario.username !== username || usuario.password !== password) {
+                    document.getElementById('pessoa-login-error').textContent = 'Login ou senha inválidos.';
+                    return;
+                }
+                saveSession({ type: 'user', userId: usuario.id, role: usuario.role, lojaId: usuario.lojaId, name: usuario.name, viewingUserId: null });
+                location.hash = 'app';
+            });
+
+            document.getElementById('loja-form').addEventListener('submit', event => {
+                event.preventDefault();
+                const name = document.getElementById('loja-name-input').value.trim();
+                if (!name) return;
+                const lojas = getLojas();
+                lojas.push({ id: `loja-${Date.now()}`, name, slug: uniqueSlugFor(lojas, name), createdAt: new Date().toISOString() });
+                saveLojas(lojas);
+                event.target.reset();
+                renderMasterPanel();
+            });
+
+            document.getElementById('close-loja-team').addEventListener('click', () => {
+                selectedLojaId = null;
+                document.getElementById('loja-team-section').classList.add('hidden');
+            });
+
+            document.getElementById('cancel-usuario-edit').addEventListener('click', () => {
+                document.getElementById('usuario-form').reset();
+                document.getElementById('usuario-editing-id').value = '';
+                document.getElementById('cancel-usuario-edit').classList.add('hidden');
+            });
+
+            document.getElementById('usuario-form').addEventListener('submit', event => {
+                event.preventDefault();
+                if (!selectedLojaId) return;
+                const editingId = document.getElementById('usuario-editing-id').value;
+                const name = document.getElementById('usuario-name-input').value.trim();
+                const role = document.getElementById('usuario-role-input').value;
+                const username = document.getElementById('usuario-username-input').value.trim();
+                const password = document.getElementById('usuario-password-input').value;
+                if (!name || !username || !password) return;
+                const loja = getLojas().find(item => item.id === selectedLojaId);
+                const usuarios = getUsuarios();
+                if (editingId) {
+                    saveUsuarios(usuarios.map(item => item.id === editingId ? { ...item, name, role, username, password } : item));
+                } else {
+                    const personSlug = uniqueSlugFor(usuarios.filter(item => item.lojaId === selectedLojaId), name);
+                    usuarios.push({ id: `usuario-${Date.now()}`, lojaId: selectedLojaId, role, name, username, password, slug: personSlug, fullSlug: `${loja.slug}-${personSlug}`, createdAt: new Date().toISOString() });
+                    saveUsuarios(usuarios);
+                }
+                event.target.reset();
+                document.getElementById('usuario-editing-id').value = '';
+                document.getElementById('cancel-usuario-edit').classList.add('hidden');
+                renderMasterPanel();
+            });
+
+            document.getElementById('view-master-panel').addEventListener('click', event => {
+                const manageButton = event.target.closest('[data-manage-loja]');
+                if (manageButton) { renderLojaTeam(manageButton.dataset.manageLoja); return; }
+
+                const deleteLojaButton = event.target.closest('[data-delete-loja]');
+                if (deleteLojaButton) {
+                    if (!window.confirm('Excluir esta loja e todos os acessos vinculados a ela?')) return;
+                    const lojaId = deleteLojaButton.dataset.deleteLoja;
+                    saveLojas(getLojas().filter(item => item.id !== lojaId));
+                    saveUsuarios(getUsuarios().filter(item => item.lojaId !== lojaId));
+                    if (selectedLojaId === lojaId) { selectedLojaId = null; document.getElementById('loja-team-section').classList.add('hidden'); }
+                    renderMasterPanel();
+                    return;
+                }
+
+                const editUsuarioButton = event.target.closest('[data-edit-usuario]');
+                if (editUsuarioButton) {
+                    const usuario = getUsuarios().find(item => item.id === editUsuarioButton.dataset.editUsuario);
+                    if (!usuario) return;
+                    document.getElementById('usuario-editing-id').value = usuario.id;
+                    document.getElementById('usuario-name-input').value = usuario.name;
+                    document.getElementById('usuario-role-input').value = usuario.role;
+                    document.getElementById('usuario-username-input').value = usuario.username;
+                    document.getElementById('usuario-password-input').value = usuario.password;
+                    document.getElementById('cancel-usuario-edit').classList.remove('hidden');
+                    return;
+                }
+
+                const deleteUsuarioButton = event.target.closest('[data-delete-usuario]');
+                if (deleteUsuarioButton) {
+                    if (!window.confirm('Excluir este acesso?')) return;
+                    saveUsuarios(getUsuarios().filter(item => item.id !== deleteUsuarioButton.dataset.deleteUsuario));
+                    renderMasterPanel();
+                    return;
+                }
+
+                const copyButton = event.target.closest('[data-copy-link]');
+                if (copyButton) {
+                    copyTextRobust(copyButton.dataset.copyLink, success => {
+                        copyButton.textContent = success ? 'Copiado!' : 'Selecione e copie';
+                        setTimeout(() => { copyButton.textContent = 'Copiar'; }, 1500);
+                    });
+                    return;
+                }
+            });
+
+            document.getElementById('master-logout').addEventListener('click', () => { clearSession(); location.href = location.pathname; });
+        }
+
+        bindAuthForms();
+        window.addEventListener('hashchange', applyRoute);
+        applyRoute();
+        // ================= FIM AUTENTICAÇÃO E MULTI-LOJA =================
+
+        function taskStorageKey() { return scopedKey('siga-tarefas'); }
+        const defaultTasks = [
+            { id: 'manager-1', title: 'Reunião de alinhamento comercial', time: '09:00', owner: 'manager', completed: false, observation: '', date: '' },
+            { id: 'manager-2', title: 'Retornar orçamentos prioritários', time: '11:30', owner: 'manager', completed: false, observation: '', date: '' },
+            { id: 'manager-3', title: 'Atualizar follow-up dos clientes', time: '16:00', owner: 'manager', completed: false, observation: '', date: '' }
+        ];
+
+        function getTasks() {
+            try {
+                const savedTasks = JSON.parse(localStorage.getItem(taskStorageKey()));
+                if (Array.isArray(savedTasks) && savedTasks.length) return savedTasks;
+                const today = new Date().toISOString().split('T')[0];
+                return defaultTasks.map(task => ({ ...task, date: task.date || today }));
+            } catch (error) {
+                const today = new Date().toISOString().split('T')[0];
+                return defaultTasks.map(task => ({ ...task, date: task.date || today }));
+            }
+        }
+
+        function saveTasks(tasks) {
+            localStorage.setItem(taskStorageKey(), JSON.stringify(tasks));
+        }
+
+        function taskDateValue(task) {
+            return task.date || getLocalDateKey();
+        }
+
+        function isPastTask(task) {
+            return taskDateValue(task) < getLocalDateKey();
+        }
+
+        function createRecurringTasks(title, time, startDate, repeatDays) {
+            const seriesId = `series-${Date.now()}`;
+            const tasks = [];
+            const cursor = new Date(`${startDate}T12:00:00`);
+            const endDate = new Date(cursor);
+            endDate.setFullYear(endDate.getFullYear() + 2);
+            for (; cursor <= endDate; cursor.setDate(cursor.getDate() + 1)) {
+                if (!repeatDays.includes(cursor.getDay())) continue;
+                tasks.push({ id: `${seriesId}-${getLocalDateKey(cursor)}`, title, time, owner: currentTaskOwnerRole(), completed: false, observation: '', date: getLocalDateKey(cursor), seriesId, repeatDays });
+            }
+            return tasks;
+        }
+
+        function getTasksByScope(task, scope) {
+            const tasks = getTasks();
+            if (scope !== 'series' || !task.seriesId) return [task];
+            return tasks.filter(item => item.seriesId === task.seriesId && !isPastTask(item));
+        }
+
+        function askTaskScope(task, action) {
+            if (!task.seriesId) return 'single';
+            const answer = window.prompt(`${action} esta tarefa somente neste dia ou todas as ocorrências futuras?\nDigite 1 para somente este dia ou 2 para todas as futuras.`, '1');
+            return answer === '2' ? 'series' : answer === '1' ? 'single' : null;
+        }
+
+        function isTaskOverdue(task) {
+            if (task.completed) return false;
+            const now = new Date();
+            const [hours, minutes] = task.time.split(':').map(Number);
+            return hours < now.getHours() || (hours === now.getHours() && minutes < now.getMinutes());
+        }
+
+        function taskStatusClasses(task) {
+            if (task.completed) return 'border-emerald-200 bg-emerald-50';
+            if (isTaskOverdue(task)) return 'border-red-200 bg-red-50';
+            return 'border-slate-100 bg-white';
+        }
+
+        function taskStatusLabel(task) {
+            if (task.completed) return '<span class="text-emerald-600">Cumprida</span>';
+            if (isTaskOverdue(task)) return '<span class="text-red-600">Vencida</span>';
+            return '<span class="text-amber-600">Pendente</span>';
+        }
+
+        function escapeHtml(value) {
+            return String(value || '').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+        }
+
+        function sanitizeObservation(value) {
+            const container = document.createElement('div');
+            container.innerHTML = value || '';
+            const allowedTags = ['B', 'STRONG', 'U', 'I', 'EM', 'OL', 'UL', 'LI', 'BR', 'DIV'];
+            container.querySelectorAll('*').forEach(element => {
+                if (!allowedTags.includes(element.tagName)) element.replaceWith(document.createTextNode(element.textContent));
+                else Array.from(element.attributes).forEach(attribute => element.removeAttribute(attribute.name));
+            });
+            return container.innerHTML;
+        }
+
+        function observationSummary(value) {
+            const container = document.createElement('div');
+            container.innerHTML = sanitizeObservation(value);
+            return container.textContent.trim();
+        }
+
+        function renderTask(task, showActions = false) {
+            const ownerLabel = task.owner === 'manager' ? 'Gerente' : 'Você';
+            const locked = task.owner === 'manager' && getSession()?.role !== 'gerente';
+            return `<article class="task-item flex items-center gap-3 rounded-2xl border p-3 ${taskStatusClasses(task)} transition-colors" data-task-id="${task.id}">
+                <button type="button" data-toggle-task="${task.id}" aria-label="${task.completed ? 'Reabrir' : 'Concluir'} tarefa" class="w-6 h-6 shrink-0 rounded-lg border-2 ${task.completed ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-indigo-200 bg-white'} flex items-center justify-center">
+                    ${task.completed ? '<i data-lucide="check" class="w-4 h-4"></i>' : ''}
+                </button>
+                <div class="min-w-0 flex-1">
+                    <p class="truncate text-xs font-bold ${task.completed ? 'text-emerald-800 line-through' : 'text-slate-700'}">${task.title}</p>
+                    <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-semibold text-slate-400">
+                        <span class="flex items-center gap-1"><i data-lucide="clock-3" class="w-3 h-3"></i>${task.time}</span>
+                        <span>${ownerLabel}</span>
+                        ${taskStatusLabel(task)}
+                    </div>
+                    ${task.observation ? `<p role="button" tabindex="0" data-expand-observation class="observation-preview mt-2 rounded-lg bg-white/70 px-2 py-1 text-[10px] text-slate-500" aria-label="Expandir observação">${sanitizeObservation(task.observation)}</p>` : ''}
+                </div>
+                <div class="flex shrink-0 items-center gap-1">
+                    <button type="button" data-observe-task="${task.id}" aria-label="Adicionar observação" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-white hover:text-indigo-600">
+                        <i data-lucide="message-square-plus" class="w-4 h-4"></i>
+                    </button>
+                    ${showActions && !locked ? `<button type="button" data-edit-task="${task.id}" aria-label="Editar tarefa" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-white hover:text-indigo-600"><i data-lucide="pencil" class="w-4 h-4"></i></button><button type="button" data-delete-task="${task.id}" aria-label="Excluir tarefa" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-white hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
+                </div>
+            </article>`;
+        }
+
+
+        function sortedTasks() {
+            const now = new Date();
+            const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            return getTasks().sort((first, second) => {
+                if (first.completed !== second.completed) return first.completed ? 1 : -1;
+                const firstOverdue = isTaskOverdue(first);
+                const secondOverdue = isTaskOverdue(second);
+                if (firstOverdue !== secondOverdue) return firstOverdue ? -1 : 1;
+                return first.time.localeCompare(second.time);
+            });
+        }
+
+        function renderTasks() {
+            const tasks = sortedTasks();
+            document.getElementById('routine-preview').innerHTML = tasks.slice(0, 3).map(task => renderTask(task)).join('');
+            document.getElementById('tasks-list').innerHTML = tasks.length ? tasks.map(task => renderTask(task, true)).join('') : '<p class="rounded-2xl bg-white p-4 text-xs text-slate-400">Nenhuma tarefa registrada.</p>';
+            lucide.createIcons();
+        }
+
+        function updateTask(taskId, changes) {
+            const tasks = getTasks().map(task => task.id === taskId ? { ...task, ...changes } : task);
+            saveTasks(tasks);
+            refreshTaskViews();
+        }
+
+        function refreshTaskViews() {
+            renderTasks();
+            if (document.getElementById('tasks-page').classList.contains('active')) renderTasksByDate(currentSelectedDate);
+        }
+
+        let currentSelectedDate = getLocalDateKey();
+
+        function showPage(pageName) {
+            const dashboard = document.getElementById('dashboard-page');
+            const tasksPage = document.getElementById('tasks-page');
+            const salesPage = document.getElementById('sales-page');
+            const servicePage = document.getElementById('service-page');
+            const conditionalPage = document.getElementById('conditional-page');
+            const managerOverviewPage = document.getElementById('manager-overview-page');
+            const navInicio = document.getElementById('nav-inicio');
+            const navTasks = document.getElementById('nav-tasks');
+            const navSales = document.getElementById('nav-sales');
+            const navService = document.getElementById('nav-service');
+            const navConditional = document.getElementById('nav-conditional');
+            const indicator = document.getElementById('nav-indicator');
+            document.querySelectorAll('[data-desktop-page]').forEach(button => { const active = button.dataset.desktopPage === pageName; button.classList.toggle('bg-indigo-600', active); button.classList.toggle('text-white', active); button.classList.toggle('text-slate-500', !active); });
+
+            [tasksPage, salesPage, servicePage, conditionalPage, managerOverviewPage].forEach(page => { page.classList.remove('active'); page.classList.add('hidden'); });
+            [navInicio, navTasks, navSales, navService, navConditional].forEach(nav => { nav.classList.add('text-slate-300'); nav.classList.remove('text-indigo-600'); });
+
+            if (pageName === 'dashboard') {
+                dashboard.classList.remove('hidden');
+                navInicio.classList.remove('text-slate-300');
+                navInicio.classList.add('text-indigo-600');
+                indicator.style.left = '0%';
+                renderTasks();
+                renderDashboardServices();
+                renderDashboardConditionals();
+            } else if (pageName === 'service') {
+                dashboard.classList.add('hidden');
+                servicePage.classList.remove('hidden');
+                navService.classList.remove('text-slate-300');
+                navService.classList.add('text-indigo-600');
+                indicator.style.left = '20%';
+                renderServices();
+            } else if (pageName === 'sales') {
+                dashboard.classList.add('hidden');
+                salesPage.classList.remove('hidden');
+                navSales.classList.remove('text-slate-300');
+                navSales.classList.add('text-indigo-600');
+                indicator.style.left = '40%';
+                renderSales();
+            } else if (pageName === 'tasks') {
+                dashboard.classList.add('hidden');
+                tasksPage.classList.add('active');
+                navTasks.classList.remove('text-slate-300');
+                navTasks.classList.add('text-indigo-600');
+                indicator.style.left = '60%';
+                const dateSelector = document.getElementById('task-date-selector');
+                dateSelector.value = currentSelectedDate;
+                renderDateCarousel();
+                refreshTaskViews();
+            } else if (pageName === 'conditional') {
+                dashboard.classList.add('hidden');
+                conditionalPage.classList.remove('hidden');
+                navConditional.classList.remove('text-slate-300');
+                navConditional.classList.add('text-indigo-600');
+                indicator.style.left = '80%';
+                renderConditionals();
+            } else if (pageName === 'manager-overview') {
+                dashboard.classList.add('hidden');
+                managerOverviewPage.classList.remove('hidden');
+                renderManagerOverview();
+            }
+        }
+
+        function renderDateCarousel() {
+            const carousel = document.getElementById('task-date-carousel');
+            const selectedDate = new Date(`${currentSelectedDate}T12:00:00`);
+            const formatter = new Intl.DateTimeFormat('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
+            const dates = Array.from({ length: 15 }, (_, index) => {
+                const date = new Date(selectedDate);
+                date.setDate(selectedDate.getDate() + index - 7);
+                return date;
+            });
+            carousel.innerHTML = dates.map(date => {
+                const dateKey = getLocalDateKey(date);
+                const isSelected = dateKey === currentSelectedDate;
+                const isToday = dateKey === getLocalDateKey();
+                const label = formatter.format(date).replace('.', '');
+                return `<button type="button" data-task-date="${dateKey}" class="date-option snap-center shrink-0 rounded-xl border px-3 py-2 text-left transition ${isSelected ? 'border-indigo-500 bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'border-slate-200 bg-white text-slate-500 hover:border-indigo-300 hover:bg-indigo-50'}" aria-pressed="${isSelected}">
+                    <span class="block text-[9px] font-black uppercase tracking-wide opacity-80">${isToday ? 'Hoje' : label.split(',')[0]}</span>
+                    <span class="block text-sm font-black">${date.getDate()}</span>
+                    <span class="block text-[9px] font-semibold opacity-80">${label.split(',')[1] || ''}</span>
+                </button>`;
+            }).join('');
+            const activeOption = carousel.querySelector(`[data-task-date="${currentSelectedDate}"]`);
+            activeOption?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            lucide.createIcons();
+        }
+
+        function selectTaskDate(dateKey) {
+            currentSelectedDate = dateKey;
+            document.getElementById('task-date-selector').value = dateKey;
+            renderDateCarousel();
+            renderTasksByDate(currentSelectedDate);
+        }
+
+        function renderTasksByDate(dateKey) {
+            const tasks = sortedTasks().filter(task => {
+                const filterDate = dateKey || getLocalDateKey();
+                const taskDate = task.date || getLocalDateKey();
+                return taskDate === filterDate;
+            });
+            document.getElementById('tasks-list').innerHTML = tasks.length ? tasks.map(task => renderTask(task, true)).join('') : '<p class="rounded-2xl bg-white p-4 text-xs text-slate-400">Nenhuma tarefa para este dia.</p>';
+            lucide.createIcons();
+        }
+
+        function salesStorageKey() { return scopedKey('siga-vendas'); }
+        const saleProducts = ['Tênis casual', 'Tênis esportivo', 'Sapatênis', 'Sandália', 'Rasteirinha', 'Cintos', 'Camisa', 'Bermuda', 'Bolsa', 'Mala de viagem', 'Acessório esportivo', 'Acessório de moda', 'Chuteira', 'Bola', 'Tops', 'Maiô', 'Meia', 'Carteira', 'Outros'];
+        const productsWithGender = new Set(['Tênis casual', 'Tênis esportivo', 'Sapatênis', 'Sandália', 'Rasteirinha', 'Cintos', 'Camisa', 'Bermuda', 'Bolsa', 'Mala de viagem', 'Acessório de moda', 'Chuteira', 'Tops', 'Maiô', 'Meia', 'Carteira']);
+        let salesPeriod = 'day';
+        let salesSelectedDate = getLocalDateKey();
+        let salesSelectedMonth = salesSelectedDate.slice(0, 7);
+        let salesWeekStart = salesSelectedDate;
+        let salesWeekEnd = salesSelectedDate;
+        let editingSaleId = null;
+
+        function getSales() {
+            try {
+                const savedSales = JSON.parse(localStorage.getItem(salesStorageKey()));
+                return Array.isArray(savedSales) ? savedSales : [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function saveSales(sales) {
+            localStorage.setItem(salesStorageKey(), JSON.stringify(sales));
+        }
+
+        function salesInPeriod() {
+            const sales = getSales();
+            if (salesPeriod === 'day') return sales.filter(sale => sale.date === salesSelectedDate);
+            if (salesPeriod === 'month') return sales.filter(sale => sale.date.slice(0, 7) === salesSelectedMonth);
+            return sales.filter(sale => sale.date >= salesWeekStart && sale.date <= salesWeekEnd);
+        }
+
+        function money(value) {
+            return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function renderSalesDateCarousel() {
+            const carousel = document.getElementById('sales-date-carousel');
+            const selected = new Date(`${salesSelectedDate}T12:00:00`);
+            const formatter = new Intl.DateTimeFormat('pt-BR', { weekday: 'short', month: 'short' });
+            carousel.innerHTML = Array.from({ length: 15 }, (_, index) => {
+                const date = new Date(selected);
+                date.setDate(selected.getDate() + index - 7);
+                const key = getLocalDateKey(date);
+                const active = key === salesSelectedDate;
+                return `<button type="button" data-sales-date="${key}" class="shrink-0 snap-center rounded-xl border px-3 py-2 text-left ${active ? 'border-indigo-500 bg-indigo-600 text-white' : 'border-slate-200 bg-white text-slate-500'}"><span class="block text-[9px] font-black uppercase">${key === getLocalDateKey() ? 'Hoje' : formatter.format(date).split(',')[0]}</span><span class="block text-sm font-black">${date.getDate()}</span><span class="block text-[9px]">${formatter.format(date).split(',')[1] || ''}</span></button>`;
+            }).join('');
+            carousel.querySelector(`[data-sales-date="${salesSelectedDate}"]`)?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
+
+        function renderSales() {
+            const periodSales = salesInPeriod().sort((first, second) => second.datetime.localeCompare(first.datetime));
+            const total = periodSales.reduce((sum, sale) => sum + Number(sale.value), 0);
+            document.getElementById('sales-month-selector').value = salesSelectedMonth;
+            document.getElementById('sales-total').textContent = money(total);
+            document.getElementById('sales-count').textContent = `${periodSales.length} registro${periodSales.length === 1 ? '' : 's'}`;
+            const monthLabel = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(new Date(`${salesSelectedMonth}-01T12:00:00`));
+            document.getElementById('sales-month-label').textContent = monthLabel;
+            document.getElementById('sales-period-label').textContent = salesPeriod === 'day' ? `Vendas de ${new Date(`${salesSelectedDate}T12:00:00`).toLocaleDateString('pt-BR')}` : salesPeriod === 'month' ? `Vendas de ${monthLabel}` : `Vendas de ${new Date(`${salesWeekStart}T12:00:00`).toLocaleDateString('pt-BR')} até ${new Date(`${salesWeekEnd}T12:00:00`).toLocaleDateString('pt-BR')}`;
+            const productsReport = {};
+            periodSales.forEach(sale => (sale.products || []).forEach(product => { const key = product.name || product; productsReport[key] = (productsReport[key] || 0) + 1; }));
+            const reportEntries = Object.entries(productsReport).sort((first, second) => second[1] - first[1]);
+            document.getElementById('sales-products-report').innerHTML = reportEntries.length ? reportEntries.map(([name, quantity]) => `<div class="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2"><span class="text-xs font-bold text-slate-600">${escapeHtml(name)}</span><strong class="text-xs font-black text-indigo-600">${quantity}</strong></div>`).join('') : '<p class="text-xs text-slate-400">Nenhum produto registrado neste período.</p>';
+            document.getElementById('sales-list').innerHTML = periodSales.length ? periodSales.map(sale => `<article class="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"><div class="flex items-start justify-between gap-3"><div><p class="text-sm font-bold text-slate-700">${escapeHtml(sale.client || 'Cliente não informado')}</p><p class="mt-1 text-[10px] font-semibold text-slate-400">${new Date(sale.datetime).toLocaleDateString('pt-BR')} às ${new Date(sale.datetime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p></div><div class="flex items-center gap-2"><strong class="text-sm font-black text-emerald-600">${money(sale.value)}</strong><button type="button" data-edit-sale="${sale.id}" aria-label="Editar venda" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50 hover:text-indigo-600"><i data-lucide="pencil" class="h-4 w-4"></i></button><button type="button" data-delete-sale="${sale.id}" aria-label="Excluir venda" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50 hover:text-red-600"><i data-lucide="trash-2" class="h-4 w-4"></i></button></div></div><div class="mt-3 flex flex-wrap gap-1">${(sale.products || []).map(product => `<span class="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-bold text-indigo-600">${escapeHtml(product.name || product)}${product.gender ? ` · ${escapeHtml(product.gender)}` : ''}</span>`).join('')}</div></article>`).join('') : '<p class="rounded-2xl bg-white p-5 text-xs text-slate-400">Nenhuma venda registrada neste período.</p>';
+            renderDashboardSales();
+            renderDashboardServices();
+            renderSalesDateCarousel();
+            lucide.createIcons();
+        }
+
+        function renderDashboardSales() {
+            const todaySales = getSales().filter(sale => sale.date === getLocalDateKey()).sort((first, second) => second.datetime.localeCompare(first.datetime));
+            document.getElementById('dashboard-sales-total').textContent = money(todaySales.reduce((sum, sale) => sum + Number(sale.value), 0));
+            document.getElementById('dashboard-sales-list').innerHTML = todaySales.length ? todaySales.slice(0, 3).map(sale => `<div class="flex items-center justify-between py-3"><span class="text-xs font-medium text-slate-500">${new Date(sale.datetime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · ${escapeHtml(sale.client || 'Cliente não informado')}</span><span class="text-sm font-black text-slate-800">${money(sale.value)}</span></div>`).join('') : '<p class="py-3 text-xs text-slate-400">Nenhuma venda registrada hoje.</p>';
+        }
+
+        function renderSaleProductOptions(selectedProducts = []) {
+            renderProductOptionsInto('sale-product-options', selectedProducts);
+        }
+
+        function renderProductOptionsInto(targetId, selectedProducts = []) {
+            const productList = [...saleProducts].sort((first, second) => first === 'Outros' ? 1 : second === 'Outros' ? -1 : first.localeCompare(second, 'pt-BR'));
+            const target = document.getElementById(targetId);
+            target.innerHTML = productList.map(product => {
+                const selected = selectedProducts.find(item => (item.name || item) === product);
+                const gender = selected?.gender || '';
+                return `<div data-sale-product="${escapeHtml(product)}" class="sale-product-card rounded-xl border p-2 ${selected ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white'}"><button type="button" class="w-full text-left text-[11px] font-bold text-slate-600">${product}</button>${productsWithGender.has(product) && selected ? `<select data-sale-gender="${escapeHtml(product)}" class="mt-2 w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-600"><option value="">Sem gênero</option><option ${gender === 'Masculino' ? 'selected' : ''}>Masculino</option><option ${gender === 'Feminino' ? 'selected' : ''}>Feminino</option></select>` : ''}</div>`;
+            }).join('');
+            const toggleId = `${targetId}-expand`;
+            let toggle = document.getElementById(toggleId);
+            if (!toggle) { toggle = document.createElement('button'); toggle.type = 'button'; toggle.id = toggleId; toggle.className = 'mt-2 text-[10px] font-black uppercase tracking-wider text-indigo-500'; target.parentElement.appendChild(toggle); toggle.addEventListener('click', () => { const expanded = target.classList.contains('max-h-none'); target.classList.remove('max-h-44', 'max-h-52', 'max-h-none'); target.classList.add(expanded ? (targetId === 'service-product-options' ? 'max-h-44' : 'max-h-52') : 'max-h-none'); toggle.textContent = expanded ? 'Ver todos os produtos' : 'Recolher produtos'; }); }
+            toggle.textContent = target.classList.contains('max-h-none') ? 'Recolher produtos' : 'Ver todos os produtos';
+        }
+
+        function getSelectedSaleProducts(targetId = 'sale-product-options') {
+            return Array.from(document.querySelectorAll(`#${targetId} .sale-product-card`)).filter(card => card.classList.contains('border-indigo-500')).map(card => ({ name: card.dataset.saleProduct, gender: card.querySelector('[data-sale-gender]')?.value || '' }));
+        }
+
+        function serviceStorageKey() { return scopedKey('siga-atendimentos'); }
+        let servicePeriod = 'day';
+        let serviceSelectedDate = getLocalDateKey();
+        let serviceWeekStart = serviceSelectedDate;
+        let serviceWeekEnd = serviceSelectedDate;
+        let editingServiceId = null;
+
+        function getServices() {
+            try { const saved = JSON.parse(localStorage.getItem(serviceStorageKey())); return Array.isArray(saved) ? saved : []; } catch (error) { return []; }
+        }
+
+        function saveServices(services) { localStorage.setItem(serviceStorageKey(), JSON.stringify(services)); }
+
+        function servicesInPeriod() {
+            const savedServices = getServices();
+            const linkedSales = new Set(savedServices.map(item => item.saleId).filter(Boolean));
+            const linkedConditionals = new Set(savedServices.map(item => item.conditionalId).filter(Boolean));
+            const standaloneSales = getSales().filter(sale => !linkedSales.has(sale.id)).map(sale => ({ id: `sale-service-${sale.id}`, saleId: sale.id, client: sale.client, outcome: 'converted', outcomeLabel: 'Venda realizada', value: sale.value, products: sale.products || [], notes: 'Venda registrada diretamente na tela de vendas.', datetime: sale.datetime, date: sale.date }));
+            const standaloneConditionals = getConditionals().filter(item => !linkedConditionals.has(item.id)).map(item => ({ id: `conditional-service-${item.id}`, conditionalId: item.id, client: item.client, outcome: 'conditional', outcomeLabel: 'Levou condicional', products: item.products || [], notes: item.observation || 'Condicional registrada diretamente na tela de condicionais.', datetime: item.createdAt, date: item.createdAt.slice(0, 10) }));
+            const services = [...savedServices, ...standaloneSales, ...standaloneConditionals];
+            if (servicePeriod === 'month') return services.filter(item => item.date.slice(0, 7) === serviceSelectedDate.slice(0, 7));
+            if (servicePeriod === 'week') {
+                return services.filter(item => item.date >= serviceWeekStart && item.date <= serviceWeekEnd);
+            }
+            return services.filter(item => item.date === serviceSelectedDate);
+        }
+
+        function renderServiceDateCarousel() {
+            const carousel = document.getElementById('service-date-carousel'); const selected = new Date(`${serviceSelectedDate}T12:00:00`); const formatter = new Intl.DateTimeFormat('pt-BR', { weekday: 'short', month: 'short' });
+            carousel.innerHTML = Array.from({ length: 15 }, (_, index) => { const date = new Date(selected); date.setDate(selected.getDate() + index - 7); const key = getLocalDateKey(date); const active = key === serviceSelectedDate; return `<button type="button" data-service-date="${key}" class="shrink-0 snap-center rounded-xl border px-3 py-2 text-left ${active ? 'border-indigo-500 bg-indigo-600 text-white' : 'border-slate-200 bg-white text-slate-500'}"><span class="block text-[9px] font-black uppercase">${key === getLocalDateKey() ? 'Hoje' : formatter.format(date).split(',')[0]}</span><span class="block text-sm font-black">${date.getDate()}</span><span class="block text-[9px]">${formatter.format(date).split(',')[1] || ''}</span></button>`; }).join('');
+            carousel.querySelector(`[data-service-date="${serviceSelectedDate}"]`)?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
+
+        function renderServices() {
+            const services = servicesInPeriod().sort((first, second) => second.datetime.localeCompare(first.datetime)); const conversions = services.filter(item => item.outcome === 'converted').length; const conditional = services.filter(item => item.outcome === 'conditional').length; const authorized = services.filter(item => item.outcome === 'authorized').length; const noSale = services.length - conversions;
+            document.getElementById('service-total').textContent = services.length; document.getElementById('service-conversions').textContent = conversions; document.getElementById('service-rate').textContent = services.length ? `${Math.round(conversions / services.length * 100)}%` : '0%'; document.getElementById('service-conditional').textContent = conditional; document.getElementById('service-authorized').textContent = authorized; document.getElementById('service-no-sale').textContent = noSale;
+            const serviceMonthLabel = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(new Date(`${serviceSelectedDate.slice(0, 7)}-01T12:00:00`));
+            document.getElementById('service-period-label').textContent = servicePeriod === 'day' ? `Atendimentos de ${new Date(`${serviceSelectedDate}T12:00:00`).toLocaleDateString('pt-BR')}` : servicePeriod === 'week' ? `Atendimentos de ${new Date(`${serviceWeekStart}T12:00:00`).toLocaleDateString('pt-BR')} até ${new Date(`${serviceWeekEnd}T12:00:00`).toLocaleDateString('pt-BR')}` : `Atendimentos de ${serviceMonthLabel}`;
+            document.getElementById('service-week-start').value = serviceWeekStart;
+            document.getElementById('service-week-end').value = serviceWeekEnd;
+            const reasons = {}; services.filter(item => item.outcome !== 'converted').forEach(item => { reasons[item.outcomeLabel] = (reasons[item.outcomeLabel] || 0) + 1; }); const reasonEntries = Object.entries(reasons).sort((first, second) => second[1] - first[1]);
+            document.getElementById('service-reasons-report').innerHTML = reasonEntries.length ? reasonEntries.map(([reason, count]) => `<div class="flex justify-between rounded-xl bg-slate-50 px-3 py-2 text-xs font-bold text-slate-600"><span>${escapeHtml(reason)}</span><strong class="text-indigo-600">${count}</strong></div>`).join('') : '<p class="text-xs text-slate-400">Nenhum motivo registrado.</p>';
+            const unconvertedProducts = {}; services.filter(item => item.outcome !== 'converted').forEach(item => (item.shownProducts || []).forEach(product => { const key = product.name || product; unconvertedProducts[key] = (unconvertedProducts[key] || 0) + 1; })); const topUnconverted = Object.entries(unconvertedProducts).sort((first, second) => second[1] - first[1]).slice(0, 3);
+            document.getElementById('service-unconverted-report').innerHTML = topUnconverted.length ? topUnconverted.map(([name, count]) => `<div class="flex justify-between rounded-xl bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700"><span>${escapeHtml(name)}</span><strong>${count}</strong></div>`).join('') : '<p class="text-xs text-slate-400">Nenhum produto sem conversão registrado.</p>';
+            document.getElementById('service-list').innerHTML = services.length ? services.map(item => `<article class="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"><div class="flex items-start justify-between gap-3"><div><p class="text-sm font-bold text-slate-700">${escapeHtml(item.client || 'Cliente não informado')}</p><p class="mt-1 text-[10px] font-semibold text-slate-400">${new Date(item.datetime).toLocaleDateString('pt-BR')} às ${new Date(item.datetime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p></div><div class="flex items-center gap-2"><span class="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-black text-indigo-600">${escapeHtml(item.outcomeLabel)}</span><button type="button" data-edit-service="${item.id}" aria-label="Editar atendimento" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:text-indigo-600"><i data-lucide="pencil" class="h-4 w-4"></i></button><button type="button" data-delete-service="${item.id}" aria-label="Excluir atendimento" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:text-red-600"><i data-lucide="trash-2" class="h-4 w-4"></i></button></div></div>${item.notes ? `<p class="mt-3 text-xs text-slate-500">${escapeHtml(item.notes)}</p>` : ''}${item.demand ? `<p class="mt-2 text-[10px] font-semibold text-amber-600">Procurava: ${escapeHtml(item.demand)}</p>` : ''}${(item.shownProducts || []).length ? `<div class="mt-2 flex flex-wrap gap-1">${item.shownProducts.map(product => `<span class="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-600">${escapeHtml(product.name || product)}</span>`).join('')}</div>` : ''}</article>`).join('') : '<p class="rounded-2xl bg-white p-5 text-xs text-slate-400">Nenhum atendimento registrado neste período.</p>';
+            renderServiceDateCarousel(); lucide.createIcons();
+        }
+
+        function renderDashboardServices() {
+            const services = servicesInPeriod().sort((first, second) => second.datetime.localeCompare(first.datetime)).slice(0, 3);
+            document.getElementById('dashboard-service-summary').innerHTML = services.length ? services.map(item => `<div class="rounded-xl bg-slate-50 p-3"><div class="flex items-center justify-between gap-2"><span class="truncate text-xs font-bold text-slate-700">${escapeHtml(item.client || 'Cliente não informado')}</span><span class="text-[10px] font-black text-indigo-600">${escapeHtml(item.outcomeLabel)}</span></div><p class="mt-1 text-[10px] text-slate-400">${new Date(item.datetime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}${item.notes ? ` · ${escapeHtml(item.notes)}` : ''}</p></div>`).join('') : '<p class="text-xs text-slate-400">Nenhum atendimento registrado hoje.</p>';
+        }
+
+        function conditionalStorageKey() { return scopedKey('siga-condicionais'); }
+        let editingConditionalId = null;
+
+        function getConditionals() {
+            try { const saved = JSON.parse(localStorage.getItem(conditionalStorageKey())); return Array.isArray(saved) ? saved : []; } catch (error) { return []; }
+        }
+
+        function saveConditionals(list) { localStorage.setItem(conditionalStorageKey(), JSON.stringify(list)); }
+
+        function conditionalDeadline(conditional) {
+            return new Date(new Date(conditional.createdAt).getTime() + 24 * 60 * 60 * 1000);
+        }
+
+        function isConditionalOverdue(conditional) {
+            return conditional.status === 'aberta' && conditionalDeadline(conditional) < new Date();
+        }
+
+        function digitsOnly(value) { return String(value || '').replace(/\D/g, ''); }
+
+        function whatsappLink(phone) {
+            const digits = digitsOnly(phone);
+            const withCountry = digits.startsWith('55') ? digits : `55${digits}`;
+            return `https://wa.me/${withCountry}`;
+        }
+
+        function callLink(phone) { return `tel:${digitsOnly(phone)}`; }
+
+        function renderConditionalCard(conditional) {
+            const overdue = isConditionalOverdue(conditional);
+            const statusLabel = conditional.status === 'aberta' ? (overdue ? '<span class="text-red-600">Prazo vencido</span>' : '<span class="text-amber-600">Em aberto</span>') : '<span class="text-emerald-600">Resolvida</span>';
+            const productsHtml = (conditional.products || []).map(product => `<span class="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-bold text-indigo-600">${escapeHtml(product.name || product)}${product.gender ? ` · ${escapeHtml(product.gender)}` : ''}</span>`).join('');
+            return `<article class="rounded-2xl border p-4 shadow-sm ${overdue ? 'border-red-200 bg-red-50' : 'border-slate-100 bg-white'}" data-conditional-id="${conditional.id}">
+                <div class="flex items-start justify-between gap-3">
+                    <div><p class="text-sm font-bold text-slate-700">${escapeHtml(conditional.client)}</p><p class="mt-1 text-[10px] font-semibold text-slate-400">${new Date(conditional.createdAt).toLocaleString('pt-BR')} · Prazo: ${conditionalDeadline(conditional).toLocaleString('pt-BR')}</p><p class="mt-1 text-[10px] font-black uppercase">${statusLabel}</p></div>
+                    <div class="flex items-center gap-1">
+                        <a href="${whatsappLink(conditional.phone)}" target="_blank" rel="noopener" aria-label="Abrir WhatsApp" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-emerald-50 hover:text-emerald-600"><i data-lucide="message-circle" class="h-4 w-4"></i></a>
+                        <a href="${callLink(conditional.phone)}" aria-label="Ligar para o cliente" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-indigo-50 hover:text-indigo-600"><i data-lucide="phone" class="h-4 w-4"></i></a>
+                        <button type="button" data-edit-conditional="${conditional.id}" aria-label="Editar condicional" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50 hover:text-indigo-600"><i data-lucide="pencil" class="h-4 w-4"></i></button>
+                        <button type="button" data-delete-conditional="${conditional.id}" aria-label="Excluir condicional" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50 hover:text-red-600"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
+                    </div>
+                </div>
+                <div class="mt-3 flex flex-wrap gap-1">${productsHtml}</div>
+                ${conditional.observation ? `<p class="mt-3 text-xs text-slate-500">${escapeHtml(conditional.observation)}</p>` : ''}
+                ${conditional.status === 'aberta' ? `<button type="button" data-resolve-conditional="${conditional.id}" class="mt-3 rounded-xl bg-emerald-500 px-4 py-2 text-[10px] font-bold text-white hover:bg-emerald-600">Marcar como resolvida</button>` : ''}
+            </article>`;
+        }
+
+        function renderConditionals() {
+            const conditionals = getConditionals().sort((first, second) => second.createdAt.localeCompare(first.createdAt));
+            const open = conditionals.filter(item => item.status === 'aberta');
+            const resolved = conditionals.filter(item => item.status !== 'aberta');
+            const overdue = open.filter(isConditionalOverdue);
+            document.getElementById('conditional-open-count').textContent = open.length;
+            document.getElementById('conditional-resolved-count').textContent = resolved.length;
+            document.getElementById('conditional-overdue-count').textContent = overdue.length;
+            document.getElementById('conditional-list').innerHTML = conditionals.length ? conditionals.map(renderConditionalCard).join('') : '<p class="rounded-2xl bg-white p-5 text-xs text-slate-400">Nenhuma condicional registrada.</p>';
+            lucide.createIcons();
+        }
+
+        function renderDashboardConditionals() {
+            const open = getConditionals().filter(item => item.status === 'aberta').sort((first, second) => first.createdAt.localeCompare(second.createdAt)).slice(0, 3);
+            document.getElementById('dashboard-conditional-summary').innerHTML = open.length ? open.map(item => `<div class="rounded-xl ${isConditionalOverdue(item) ? 'bg-red-50' : 'bg-slate-50'} p-3"><div class="flex items-center justify-between gap-2"><span class="truncate text-xs font-bold text-slate-700">${escapeHtml(item.client)}</span><span class="text-[10px] font-black ${isConditionalOverdue(item) ? 'text-red-600' : 'text-indigo-600'}">${isConditionalOverdue(item) ? 'Vencida' : 'Em aberto'}</span></div><p class="mt-1 text-[10px] text-slate-400">Prazo: ${conditionalDeadline(item).toLocaleString('pt-BR')}</p></div>`).join('') : '<p class="text-xs text-slate-400">Nenhuma condicional em aberto.</p>';
+        }
+
+        function suggestedConditionalTaskDate() {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            return getLocalDateKey(tomorrow);
+        }
+
+        function upsertConditionalTask(existingTaskId, client, taskDate, taskTime) {
+            const tasks = getTasks();
+            const taskTitle = `Cobrar condicional - ${client}`;
+            if (existingTaskId && tasks.some(item => item.id === existingTaskId)) {
+                saveTasks(tasks.map(item => item.id === existingTaskId ? { ...item, title: taskTitle, time: taskTime, date: taskDate } : item));
+                return existingTaskId;
+            }
+            const taskId = `conditional-task-${Date.now()}`;
+            saveTasks([...tasks, { id: taskId, title: taskTitle, time: taskTime, owner: currentTaskOwnerRole(), completed: false, observation: '', date: taskDate }]);
+            return taskId;
+        }
+
+        function upsertConditionalRecord({ id, client, phone, products, observation, taskDate, taskTime, status }) {
+            const previous = id ? getConditionals().find(item => item.id === id) : null;
+            const conditional = { id: id || `conditional-${Date.now()}`, client, phone, products, observation, createdAt: previous?.createdAt || new Date().toISOString(), status: previous?.status || status || 'aberta', taskId: previous?.taskId || null };
+            conditional.taskId = upsertConditionalTask(conditional.taskId, client, taskDate, taskTime);
+            const conditionals = getConditionals();
+            saveConditionals(id ? conditionals.map(item => item.id === id ? conditional : item) : [...conditionals, conditional]);
+            currentSelectedDate = taskDate;
+            return conditional;
+        }
+
+        function openConditionalModal(conditional = null) {
+            editingConditionalId = conditional?.id || null;
+            document.getElementById('conditional-form').reset();
+            document.getElementById('conditional-client').value = conditional?.client || '';
+            document.getElementById('conditional-phone').value = conditional?.phone || '';
+            document.getElementById('conditional-observation').value = conditional?.observation || '';
+            const linkedTask = conditional?.taskId ? getTasks().find(item => item.id === conditional.taskId) : null;
+            document.getElementById('conditional-task-date').value = linkedTask?.date || suggestedConditionalTaskDate();
+            document.getElementById('conditional-task-time').value = linkedTask?.time || '10:00';
+            document.getElementById('conditional-product-feedback').textContent = '';
+            renderProductOptionsInto('conditional-product-options', conditional?.products || []);
+            const modal = document.getElementById('conditional-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeConditionalModal() {
+            editingConditionalId = null;
+            const modal = document.getElementById('conditional-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function showServicePeriod(period) { servicePeriod = period; document.querySelectorAll('.service-period-button').forEach(button => { const active = button.dataset.servicePeriod === period; button.classList.toggle('bg-white', active); button.classList.toggle('text-indigo-600', active); }); document.getElementById('service-week-range').classList.toggle('hidden', period !== 'week'); renderServices(); }
+
+        function openServiceModal(service = null) {
+            editingServiceId = service?.id || null;
+            document.getElementById('service-form').reset();
+            document.getElementById('service-outcome').value = service?.outcome || '';
+            document.getElementById('service-client').value = service?.client || '';
+            document.getElementById('service-value').value = service?.value || '';
+            document.getElementById('service-demand').value = service?.demand || '';
+            document.getElementById('service-notes').value = service?.notes || '';
+            const linkedConditional = service?.conditionalId ? getConditionals().find(item => item.id === service.conditionalId) : null;
+            const linkedConditionalTask = linkedConditional?.taskId ? getTasks().find(item => item.id === linkedConditional.taskId) : null;
+            document.getElementById('service-phone').value = linkedConditional?.phone || '';
+            document.getElementById('service-conditional-task-date').value = linkedConditionalTask?.date || suggestedConditionalTaskDate();
+            document.getElementById('service-conditional-task-time').value = linkedConditionalTask?.time || '10:00';
+            document.getElementById('service-conditional-product-feedback').textContent = '';
+            const outcomeCards = document.getElementById('service-outcome-cards');
+            outcomeCards.classList.toggle('hidden', Boolean(service));
+            document.getElementById('service-outcome-expand').classList.toggle('hidden', !service);
+            document.querySelectorAll('.service-outcome-card').forEach(card => { const selected = card.dataset.serviceOutcomeCard === service?.outcome; card.classList.toggle('border-indigo-500', selected); card.classList.toggle('bg-indigo-50', selected); });
+            renderProductOptionsInto('service-product-options', service?.products || []);
+            renderProductOptionsInto('service-conditional-products', linkedConditional?.products || []);
+            renderProductOptionsInto('service-shown-products', service?.shownProducts || []);
+            updateServiceFields();
+            const modal = document.getElementById('service-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        function closeServiceModal() { editingServiceId = null; const modal = document.getElementById('service-modal'); modal.classList.add('hidden'); modal.classList.remove('flex'); }
+        function updateServiceFields() {
+            const outcome = document.getElementById('service-outcome').value;
+            const converted = outcome === 'converted';
+            const isConditional = outcome === 'conditional';
+            document.getElementById('service-sale-fields').classList.toggle('hidden', !converted);
+            document.getElementById('service-conditional-fields').classList.toggle('hidden', !isConditional);
+            document.getElementById('service-reason-fields').classList.toggle('hidden', converted || isConditional || !outcome);
+        }
+
+        function initServiceOutcomeCards() {
+            const select = document.getElementById('service-outcome');
+            const options = Array.from(select.options).map(option => ({ value: option.value, label: option.textContent }));
+            select.classList.add('hidden');
+            const wrapper = document.createElement('div');
+            wrapper.id = 'service-outcome-cards';
+            wrapper.className = 'grid grid-cols-2 gap-2 md:grid-cols-3';
+            wrapper.innerHTML = options.map(option => `<button type="button" data-service-outcome-card="${option.value}" class="service-outcome-card rounded-xl border border-slate-200 bg-white p-3 text-left text-[11px] font-bold text-slate-700">${option.label}</button>`).join('');
+            select.parentElement.insertBefore(wrapper, select);
+            wrapper.addEventListener('click', event => {
+                const button = event.target.closest('[data-service-outcome-card]');
+                if (!button) return;
+                select.value = button.dataset.serviceOutcomeCard;
+                wrapper.querySelectorAll('.service-outcome-card').forEach(card => card.classList.remove('border-indigo-500', 'bg-indigo-50'));
+                button.classList.add('border-indigo-500', 'bg-indigo-50');
+                updateServiceFields();
+                wrapper.classList.add('hidden');
+                const expand = document.getElementById('service-outcome-expand');
+                expand.classList.remove('hidden');
+                expand.textContent = `Resultado: ${button.textContent} · alterar`;
+            });
+            const expand = document.createElement('button');
+            expand.type = 'button';
+            expand.id = 'service-outcome-expand';
+            expand.className = 'hidden mt-2 text-[10px] font-black uppercase tracking-wider text-indigo-500';
+            expand.textContent = 'Alterar resultado';
+            select.parentElement.appendChild(expand);
+            expand.addEventListener('click', () => { wrapper.classList.toggle('hidden'); });
+            select.value = '';
+            updateServiceFields();
+        }
+
+        function openNewSaleModal() {
+            editingSaleId = null;
+            document.getElementById('new-sale-form').reset();
+            document.getElementById('sale-product-feedback').textContent = '';
+            const modal = document.getElementById('new-sale-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('sale-datetime-input').value = now.toISOString().slice(0, 16);
+            document.getElementById('sale-value-input').focus();
+            renderSaleProductOptions();
+        }
+
+        function openEditSaleModal(sale) {
+            editingSaleId = sale.id;
+            document.getElementById('sale-client-input').value = sale.client || '';
+            document.getElementById('sale-value-input').value = sale.value;
+            document.getElementById('sale-datetime-input').value = sale.datetime;
+            renderSaleProductOptions(sale.products || []);
+            const modal = document.getElementById('new-sale-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeNewSaleModal() {
+            editingSaleId = null;
+            const modal = document.getElementById('new-sale-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function showSalesPeriod(period) {
+            salesPeriod = period;
+            document.querySelectorAll('.sales-period-button').forEach(button => button.classList.toggle('bg-white', button.dataset.salesPeriod === period));
+            document.querySelectorAll('.sales-period-button').forEach(button => button.classList.toggle('text-indigo-600', button.dataset.salesPeriod === period));
+            document.getElementById('sales-week-days').classList.toggle('hidden', period !== 'week');
+            document.getElementById('sales-month-picker').classList.toggle('hidden', period !== 'month');
+            document.getElementById('sales-date-carousel').classList.toggle('hidden', period === 'month');
+            if (period === 'week') renderSalesWeekDays();
+            renderSales();
+        }
+
+        function renderSalesWeekDays() {
+            document.getElementById('sales-week-start').value = salesWeekStart;
+            document.getElementById('sales-week-end').value = salesWeekEnd;
+        }
+
+        let observationTaskId = null;
+
+        function openObservationEditor(task) {
+            observationTaskId = task.id;
+            document.getElementById('observation-title').textContent = `Observação: ${task.title}`;
+            document.getElementById('observation-editor').innerHTML = sanitizeObservation(task.observation);
+            const modal = document.getElementById('observation-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.getElementById('observation-editor').focus();
+        }
+
+        function closeObservationEditor() {
+            observationTaskId = null;
+            const modal = document.getElementById('observation-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function initObservationEditor() {
+            const modal = document.getElementById('observation-modal');
+            if (modal.parentElement !== document.body) document.body.appendChild(modal);
+            document.querySelectorAll('[data-format]').forEach(button => {
+                button.addEventListener('click', () => {
+                    document.getElementById('observation-editor').focus();
+                    document.execCommand(button.dataset.format, false);
+                });
+            });
+            document.getElementById('save-observation').addEventListener('click', () => {
+                if (observationTaskId) updateTask(observationTaskId, { observation: sanitizeObservation(document.getElementById('observation-editor').innerHTML) });
+                closeObservationEditor();
+            });
+            document.getElementById('close-observation').addEventListener('click', closeObservationEditor);
+            document.getElementById('cancel-observation').addEventListener('click', closeObservationEditor);
+            document.getElementById('observation-modal').addEventListener('click', event => {
+                if (event.target.id === 'observation-modal') closeObservationEditor();
+            });
+        }
+
+        function requestTaskNotifications() {
+            if (!('Notification' in window)) return;
+            if (Notification.permission === 'default') Notification.requestPermission();
+        }
+
+        function checkTaskNotifications() {
+            if (!('Notification' in window) || Notification.permission !== 'granted') return;
+            const now = new Date();
+            const today = getLocalDateKey(now);
+            const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            const sentKey = scopedKey('siga-notificacoes-enviadas');
+            let sent = {};
+            try { sent = JSON.parse(localStorage.getItem(sentKey)) || {}; } catch (error) { sent = {}; }
+            getTasks().filter(task => !task.completed && task.time === currentTime).forEach(task => {
+                const notificationKey = `${today}-${task.id}`;
+                if (sent[notificationKey]) return;
+                const notification = new Notification(`Tarefa às ${task.time}`, { body: task.title, tag: notificationKey, icon: 'https://cdn.jsdelivr.net/npm/lucide-static@0.468.0/icons/check-square.svg' });
+                notification.onclick = () => { window.focus(); showPage('tasks'); notification.close(); };
+                sent[notificationKey] = true;
+            });
+            localStorage.setItem(sentKey, JSON.stringify(sent));
+        }
+
+        function initTaskNotifications() {
+            requestTaskNotifications();
+            checkTaskNotifications();
+            setupModalBackdropClose();
+            showPage('dashboard');
+            window.setInterval(checkTaskNotifications, 15000);
+        }
+
+        function openNewTaskModal() {
+            document.getElementById('new-task-modal').classList.remove('hidden');
+            document.getElementById('new-task-modal').classList.add('flex');
+            document.getElementById('new-task-title-input').focus();
+        }
+
+        function closeNewTaskModal() {
+            document.getElementById('new-task-modal').classList.add('hidden');
+            document.getElementById('new-task-modal').classList.remove('flex');
+        }
+
+        function setupModalBackdropClose() {
+            const modal = document.getElementById('new-task-modal');
+            modal.addEventListener('click', event => {
+                if (event.target === modal) closeNewTaskModal();
+            });
+            const saleModal = document.getElementById('new-sale-modal');
+            saleModal.addEventListener('click', event => {
+                if (event.target === saleModal) closeNewSaleModal();
+            });
+            const serviceModal = document.getElementById('service-modal');
+            serviceModal.addEventListener('click', event => { if (event.target === serviceModal) closeServiceModal(); });
+            const conditionalModal = document.getElementById('conditional-modal');
+            conditionalModal.addEventListener('click', event => { if (event.target === conditionalModal) closeConditionalModal(); });
+        }
+
+        function bindTaskActions() {
+            initServiceOutcomeCards();
+            document.getElementById('nav-inicio').addEventListener('click', () => showPage('dashboard'));
+            document.getElementById('nav-tasks').addEventListener('click', () => showPage('tasks'));
+            document.getElementById('nav-sales').addEventListener('click', () => showPage('sales'));
+            document.getElementById('nav-service').addEventListener('click', () => showPage('service'));
+            document.getElementById('nav-conditional').addEventListener('click', () => showPage('conditional'));
+            document.querySelectorAll('[data-desktop-page]').forEach(button => button.addEventListener('click', () => showPage(button.dataset.desktopPage)));
+            document.querySelectorAll('[data-back-dashboard]').forEach(button => button.addEventListener('click', () => showPage('dashboard')));
+            document.getElementById('dashboard-sales-title').addEventListener('click', () => showPage('sales'));
+            document.getElementById('dashboard-service-title').addEventListener('click', () => showPage('service'));
+            document.getElementById('open-service-from-dashboard').addEventListener('click', () => showPage('service'));
+            document.getElementById('dashboard-conditional-title').addEventListener('click', () => showPage('conditional'));
+            document.getElementById('open-conditional-from-dashboard').addEventListener('click', () => showPage('conditional'));
+            const routineTitle = document.getElementById('routine-title');
+            routineTitle.addEventListener('click', () => showPage('tasks'));
+            routineTitle.addEventListener('keydown', event => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    showPage('tasks');
+                }
+            });
+            document.getElementById('fab-button').addEventListener('click', () => {
+                const tasksPage = document.getElementById('tasks-page');
+                const salesPage = document.getElementById('sales-page');
+                const servicePage = document.getElementById('service-page');
+                const conditionalPage = document.getElementById('conditional-page');
+                if (tasksPage.classList.contains('active')) openNewTaskModal();
+                else if (!salesPage.classList.contains('hidden')) openNewSaleModal();
+                else if (!conditionalPage.classList.contains('hidden')) openConditionalModal();
+                else openServiceModal();
+            });
+            document.getElementById('close-new-task').addEventListener('click', closeNewTaskModal);
+            document.getElementById('cancel-new-task').addEventListener('click', closeNewTaskModal);
+            document.getElementById('close-new-sale').addEventListener('click', closeNewSaleModal);
+            document.getElementById('cancel-new-sale').addEventListener('click', closeNewSaleModal);
+            document.getElementById('close-service').addEventListener('click', closeServiceModal);
+            document.getElementById('cancel-service').addEventListener('click', closeServiceModal);
+            document.getElementById('close-conditional').addEventListener('click', closeConditionalModal);
+            document.getElementById('cancel-conditional').addEventListener('click', closeConditionalModal);
+            document.getElementById('task-repeat-toggle').addEventListener('change', event => document.getElementById('task-repeat-options').classList.toggle('hidden', !event.target.checked));
+            document.getElementById('new-task-form').addEventListener('submit', event => {
+                event.preventDefault();
+                const title = document.getElementById('new-task-title-input').value.trim();
+                const time = document.getElementById('new-task-time-input').value;
+                if (!title || !time) return;
+                const repeatEnabled = document.getElementById('task-repeat-toggle').checked;
+                const repeatDays = Array.from(document.querySelectorAll('.task-repeat-day:checked')).map(input => Number(input.value));
+                const tasks = getTasks();
+                const newTasks = repeatEnabled && repeatDays.length ? createRecurringTasks(title, time, currentSelectedDate, repeatDays) : [{ id: `user-${Date.now()}`, title, time, owner: currentTaskOwnerRole(), completed: false, observation: '', date: currentSelectedDate }];
+                tasks.push(...newTasks);
+                saveTasks(tasks);
+                event.target.reset();
+                document.getElementById('task-repeat-options').classList.add('hidden');
+                closeNewTaskModal();
+                refreshTaskViews();
+            });
+            document.getElementById('task-date-selector').addEventListener('change', event => {
+                selectTaskDate(event.target.value);
+            });
+            document.getElementById('open-task-calendar').addEventListener('click', () => {
+                const dateSelector = document.getElementById('task-date-selector');
+                if (typeof dateSelector.showPicker === 'function') dateSelector.showPicker();
+                else dateSelector.click();
+            });
+            document.getElementById('task-date-carousel').addEventListener('click', event => {
+                const dateOption = event.target.closest('[data-task-date]');
+                if (dateOption) selectTaskDate(dateOption.dataset.taskDate);
+            });
+            document.querySelectorAll('[data-sales-period]').forEach(button => button.addEventListener('click', () => showSalesPeriod(button.dataset.salesPeriod)));
+            document.getElementById('open-sales-from-dashboard').addEventListener('click', () => showPage('sales'));
+            document.getElementById('sales-date-carousel').addEventListener('click', event => {
+                const button = event.target.closest('[data-sales-date]');
+                if (button) { salesSelectedDate = button.dataset.salesDate; salesWeekStart = salesSelectedDate; salesWeekEnd = salesSelectedDate; renderSales(); }
+            });
+            document.getElementById('sales-week-start').addEventListener('change', event => { salesWeekStart = event.target.value; if (salesWeekStart > salesWeekEnd) salesWeekEnd = salesWeekStart; renderSales(); });
+            document.getElementById('sales-week-end').addEventListener('change', event => { salesWeekEnd = event.target.value; if (salesWeekEnd < salesWeekStart) salesWeekStart = salesWeekEnd; renderSales(); });
+            document.getElementById('service-week-start').addEventListener('change', event => { serviceWeekStart = event.target.value; if (serviceWeekStart > serviceWeekEnd) serviceWeekEnd = serviceWeekStart; renderServices(); });
+            document.getElementById('service-week-end').addEventListener('change', event => { serviceWeekEnd = event.target.value; if (serviceWeekEnd < serviceWeekStart) serviceWeekStart = serviceWeekEnd; renderServices(); });
+            document.getElementById('sales-month-selector').addEventListener('change', event => { salesSelectedMonth = event.target.value; renderSales(); });
+            document.getElementById('sale-product-options').addEventListener('click', event => {
+                const card = event.target.closest('[data-sale-product]');
+                if (!card || event.target.closest('select')) return;
+                const selected = card.classList.toggle('border-indigo-500');
+                card.classList.toggle('bg-indigo-50', selected);
+                card.classList.toggle('border-slate-200', !selected);
+                renderSaleProductOptions(getSelectedSaleProducts());
+            });
+            document.getElementById('new-sale-form').addEventListener('submit', event => {
+                event.preventDefault();
+                const datetime = document.getElementById('sale-datetime-input').value;
+                const value = Number(document.getElementById('sale-value-input').value);
+                const products = getSelectedSaleProducts();
+                if (!datetime || !value || value <= 0 || !products.length) {
+                    document.getElementById('sale-product-feedback').textContent = products.length ? '' : 'Escolha pelo menos um produto.';
+                    return;
+                }
+                const sales = getSales();
+                const sale = { id: editingSaleId || `sale-${Date.now()}`, client: document.getElementById('sale-client-input').value.trim(), value, datetime, date: datetime.slice(0, 10), products };
+                const updatedSales = editingSaleId ? sales.map(item => item.id === editingSaleId ? sale : item) : [...sales, sale];
+                saveSales(updatedSales);
+                event.target.reset();
+                closeNewSaleModal();
+                renderSales();
+            });
+            document.getElementById('service-outcome').addEventListener('change', updateServiceFields);
+            document.getElementById('service-product-options').addEventListener('click', event => { const card = event.target.closest('[data-sale-product]'); if (!card || event.target.closest('select')) return; const selected = card.classList.toggle('border-indigo-500'); card.classList.toggle('bg-indigo-50', selected); card.classList.toggle('border-slate-200', !selected); renderProductOptionsInto('service-product-options', getSelectedSaleProducts('service-product-options')); });
+            document.getElementById('service-shown-products').addEventListener('click', event => { const card = event.target.closest('[data-sale-product]'); if (!card || event.target.closest('select')) return; const selected = card.classList.toggle('border-indigo-500'); card.classList.toggle('bg-indigo-50', selected); card.classList.toggle('border-slate-200', !selected); renderProductOptionsInto('service-shown-products', getSelectedSaleProducts('service-shown-products')); });
+            document.getElementById('service-conditional-products').addEventListener('click', event => { const card = event.target.closest('[data-sale-product]'); if (!card || event.target.closest('select')) return; const selected = card.classList.toggle('border-indigo-500'); card.classList.toggle('bg-indigo-50', selected); card.classList.toggle('border-slate-200', !selected); renderProductOptionsInto('service-conditional-products', getSelectedSaleProducts('service-conditional-products')); });
+            document.querySelectorAll('[data-service-period]').forEach(button => button.addEventListener('click', () => showServicePeriod(button.dataset.servicePeriod)));
+            document.getElementById('service-date-carousel').addEventListener('click', event => { const button = event.target.closest('[data-service-date]'); if (button) { serviceSelectedDate = button.dataset.serviceDate; renderServices(); } });
+            document.getElementById('service-form').addEventListener('submit', event => {
+                event.preventDefault();
+                const outcome = document.getElementById('service-outcome').value; const converted = outcome === 'converted'; const isConditional = outcome === 'conditional'; const products = getSelectedSaleProducts('service-product-options'); const shownProducts = getSelectedSaleProducts('service-shown-products'); const conditionalProducts = getSelectedSaleProducts('service-conditional-products'); const value = Number(document.getElementById('service-value').value); const phone = document.getElementById('service-phone').value.trim(); const conditionalTaskDate = document.getElementById('service-conditional-task-date').value; const conditionalTaskTime = document.getElementById('service-conditional-task-time').value;
+                if (!outcome) return window.alert('Escolha o que aconteceu no atendimento.');
+                if (converted && (!value || value <= 0 || !products.length)) return window.alert('Para registrar uma venda, informe o valor e escolha ao menos um produto.');
+                if (isConditional && !phone) return window.alert('Informe o telefone do cliente para a condicional.');
+                if (isConditional && !conditionalProducts.length) { document.getElementById('service-conditional-product-feedback').textContent = 'Escolha pelo menos um produto.'; return; }
+                if (isConditional && (!conditionalTaskDate || !conditionalTaskTime)) return window.alert('Escolha a data e o horário da tarefa de cobrança.');
+                const previousService = editingServiceId ? getServices().find(item => item.id === editingServiceId) : null; const existingSaleId = previousService?.saleId; const existingConditionalId = previousService?.conditionalId; const now = new Date(); const datetime = previousService?.datetime || now.toISOString(); const labels = { converted: 'Venda realizada', conditional: 'Levou condicional', authorized: 'Venda permitida / aguardando fechamento', 'no-product': 'Não tínhamos o produto', 'just-looking': 'Só estava olhando', expensive: 'Achou caro', 'no-decision': 'Não tomou decisão', competitor: 'Preferiu a concorrência', 'return-later': 'Vai voltar depois', other: 'Outro motivo' };
+                const client = document.getElementById('service-client').value.trim();
+                const service = { id: editingServiceId || `service-${Date.now()}`, client, outcome, outcomeLabel: labels[outcome], value: converted ? value : 0, products: converted ? products : (isConditional ? conditionalProducts : []), shownProducts: (!converted && !isConditional) ? shownProducts : [], demand: document.getElementById('service-demand').value.trim(), notes: document.getElementById('service-notes').value.trim(), datetime, date: datetime.slice(0, 10), saleId: existingSaleId, conditionalId: existingConditionalId };
+                const services = getServices(); saveServices(editingServiceId ? services.map(item => item.id === editingServiceId ? service : item) : [...services, service]);
+                if (converted) { const sales = getSales(); const sale = { id: existingSaleId || `sale-${Date.now()}`, client, value, datetime, date: service.date, products }; saveSales(existingSaleId ? sales.map(item => item.id === existingSaleId ? sale : item) : [...sales, sale]); service.saleId = sale.id; saveServices(getServices().map(item => item.id === service.id ? service : item)); } else if (existingSaleId) saveSales(getSales().filter(item => item.id !== existingSaleId));
+                if (isConditional) { const conditional = upsertConditionalRecord({ id: existingConditionalId, client, phone, products: conditionalProducts, observation: service.notes, taskDate: conditionalTaskDate, taskTime: conditionalTaskTime }); service.conditionalId = conditional.id; saveServices(getServices().map(item => item.id === service.id ? service : item)); } else if (existingConditionalId) { const conditional = getConditionals().find(item => item.id === existingConditionalId); saveConditionals(getConditionals().filter(item => item.id !== existingConditionalId)); if (conditional?.taskId) saveTasks(getTasks().filter(item => item.id !== conditional.taskId)); renderConditionals(); renderDashboardConditionals(); }
+                closeServiceModal(); renderServices(); renderSales(); renderDashboardServices(); renderConditionals(); renderDashboardConditionals(); refreshTaskViews();
+            });
+            document.getElementById('conditional-product-options').addEventListener('click', event => { const card = event.target.closest('[data-sale-product]'); if (!card || event.target.closest('select')) return; const selected = card.classList.toggle('border-indigo-500'); card.classList.toggle('bg-indigo-50', selected); card.classList.toggle('border-slate-200', !selected); renderProductOptionsInto('conditional-product-options', getSelectedSaleProducts('conditional-product-options')); });
+            document.getElementById('conditional-form').addEventListener('submit', event => {
+                event.preventDefault();
+                const client = document.getElementById('conditional-client').value.trim();
+                const phone = document.getElementById('conditional-phone').value.trim();
+                const products = getSelectedSaleProducts('conditional-product-options');
+                const taskDate = document.getElementById('conditional-task-date').value;
+                const taskTime = document.getElementById('conditional-task-time').value;
+                if (!products.length) { document.getElementById('conditional-product-feedback').textContent = 'Escolha pelo menos um produto.'; return; }
+                if (!taskDate || !taskTime) return window.alert('Escolha a data e o horário da tarefa de cobrança.');
+                upsertConditionalRecord({ id: editingConditionalId, client, phone, products, observation: document.getElementById('conditional-observation').value.trim(), taskDate, taskTime });
+                closeConditionalModal();
+                renderConditionals();
+                renderDashboardConditionals();
+                refreshTaskViews();
+            });
+            document.addEventListener('click', event => {
+                const toggleButton = event.target.closest('[data-toggle-task]');
+                if (toggleButton) {
+                    const task = getTasks().find(item => item.id === toggleButton.dataset.toggleTask);
+                    if (task) updateTask(task.id, { completed: !task.completed });
+                }
+
+                const observationButton = event.target.closest('[data-observe-task]');
+                if (observationButton) {
+                    const task = getTasks().find(item => item.id === observationButton.dataset.observeTask);
+                    if (task) openObservationEditor(task);
+                }
+
+                const observationPreview = event.target.closest('[data-expand-observation]');
+                if (observationPreview) observationPreview.classList.toggle('observation-expanded');
+
+                const editSaleButton = event.target.closest('[data-edit-sale]');
+                if (editSaleButton) {
+                    const sale = getSales().find(item => item.id === editSaleButton.dataset.editSale);
+                    if (sale) openEditSaleModal(sale);
+                }
+
+                const deleteSaleButton = event.target.closest('[data-delete-sale]');
+                if (deleteSaleButton) {
+                    if (window.confirm('Excluir esta venda?')) {
+                        saveSales(getSales().filter(item => item.id !== deleteSaleButton.dataset.deleteSale));
+                        renderSales();
+                    }
+                }
+
+                const editServiceButton = event.target.closest('[data-edit-service]');
+                if (editServiceButton) {
+                    const service = servicesInPeriod().find(item => item.id === editServiceButton.dataset.editService);
+                    if (service?.id.startsWith('sale-service-')) { const sale = getSales().find(item => item.id === service.saleId); if (sale) openEditSaleModal(sale); }
+                    else if (service?.id.startsWith('conditional-service-')) { const conditional = getConditionals().find(item => item.id === service.conditionalId); if (conditional) openConditionalModal(conditional); }
+                    else if (service) openServiceModal(service);
+                }
+
+                const deleteServiceButton = event.target.closest('[data-delete-service]');
+                if (deleteServiceButton && window.confirm('Excluir este atendimento?')) {
+                    const service = servicesInPeriod().find(item => item.id === deleteServiceButton.dataset.deleteService);
+                    saveServices(getServices().filter(item => item.id !== deleteServiceButton.dataset.deleteService));
+                    if (service?.saleId) saveSales(getSales().filter(item => item.id !== service.saleId));
+                    if (service?.conditionalId) {
+                        const conditional = getConditionals().find(item => item.id === service.conditionalId);
+                        saveConditionals(getConditionals().filter(item => item.id !== service.conditionalId));
+                        if (conditional?.taskId) saveTasks(getTasks().filter(item => item.id !== conditional.taskId));
+                        renderConditionals(); renderDashboardConditionals(); refreshTaskViews();
+                    }
+                    renderServices(); renderSales(); renderDashboardServices();
+                }
+
+                const editConditionalButton = event.target.closest('[data-edit-conditional]');
+                if (editConditionalButton) { const conditional = getConditionals().find(item => item.id === editConditionalButton.dataset.editConditional); if (conditional) openConditionalModal(conditional); }
+
+                const deleteConditionalButton = event.target.closest('[data-delete-conditional]');
+                if (deleteConditionalButton && window.confirm('Excluir esta condicional?')) {
+                    const conditional = getConditionals().find(item => item.id === deleteConditionalButton.dataset.deleteConditional);
+                    saveConditionals(getConditionals().filter(item => item.id !== deleteConditionalButton.dataset.deleteConditional));
+                    if (conditional?.taskId) saveTasks(getTasks().filter(item => item.id !== conditional.taskId));
+                    renderConditionals(); renderDashboardConditionals(); refreshTaskViews();
+                }
+
+                const resolveConditionalButton = event.target.closest('[data-resolve-conditional]');
+                if (resolveConditionalButton) {
+                    const conditionals = getConditionals();
+                    saveConditionals(conditionals.map(item => item.id === resolveConditionalButton.dataset.resolveConditional ? { ...item, status: 'resolvida' } : item));
+                    renderConditionals(); renderDashboardConditionals();
+                }
+
+                const editButton = event.target.closest('[data-edit-task]');
+                if (editButton) {
+                    const task = getTasks().find(item => item.id === editButton.dataset.editTask);
+                    if (!task || (task.owner === 'manager' && getSession()?.role !== 'gerente')) return;
+                    if (isPastTask(task)) return window.alert('Tarefas de dias passados ficam registradas e não podem ser alteradas.');
+                    const scope = askTaskScope(task, 'Editar');
+                    if (!scope) return;
+                    const title = window.prompt('Nome da tarefa:', task.title);
+                    if (title === null || !title.trim()) return;
+                    const time = window.prompt('Horário (HH:MM):', task.time);
+                    if (time && /^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
+                        const tasks = getTasks();
+                        const ids = new Set(getTasksByScope(task, scope).map(item => item.id));
+                        saveTasks(tasks.map(item => ids.has(item.id) ? { ...item, title: title.trim(), time } : item));
+                        refreshTaskViews();
+                    }
+                }
+
+                const deleteButton = event.target.closest('[data-delete-task]');
+                if (deleteButton) {
+                    const task = getTasks().find(item => item.id === deleteButton.dataset.deleteTask);
+                    const deletable = task && (task.owner !== 'manager' || getSession()?.role === 'gerente');
+                    if (deletable && !isPastTask(task) && window.confirm('Excluir esta tarefa?')) {
+                        const scope = askTaskScope(task, 'Excluir');
+                        if (!scope) return;
+                        const ids = new Set(getTasksByScope(task, scope).map(item => item.id));
+                        saveTasks(getTasks().filter(item => !ids.has(item.id)));
+                        refreshTaskViews();
+                    } else if (task && isPastTask(task)) window.alert('Tarefas de dias passados ficam registradas e não podem ser excluídas.');
+                }
+            });
+        }
+
+        function initTasks() {
+            if (!localStorage.getItem(taskStorageKey())) saveTasks(defaultTasks);
+            renderTasks();
+            bindTaskActions();
+            initObservationEditor();
+            initTaskNotifications();
+            renderDashboardSales();
+        }
+
+        const moodOptions = [
+            { id: 'muito-mal', emoji: '😔', label: 'Muito mal' },
+            { id: 'mal', emoji: '😟', label: 'Mal' },
+            { id: 'normal', emoji: '😐', label: 'Normal' },
+            { id: 'bem', emoji: '😊', label: 'Bem' },
+            { id: 'excelente', emoji: '🤩', label: 'Excelente' },
+            { id: 'energizado', emoji: '🔥', label: 'Energizado' }
+        ];
+        function moodStorageKey() { return scopedKey('siga-humor-registros'); }
+        let selectedMoodId = 'normal';
+
+        function getLocalDateKey(date = new Date()) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function getMoodRecords() {
+            try {
+                return JSON.parse(localStorage.getItem(moodStorageKey())) || {};
+            } catch (error) {
+                return {};
+            }
+        }
+
+        function saveMoodRecord(dateKey, moodId) {
+            const records = getMoodRecords();
+            records[dateKey] = moodId;
+            localStorage.setItem(moodStorageKey(), JSON.stringify(records));
+        }
+
+        function getMood(moodId) {
+            return moodOptions.find(mood => mood.id === moodId) || moodOptions.find(mood => mood.id === 'normal');
+        }
+
+        function renderMoodOptions() {
+            const optionsContainer = document.getElementById('mood-options');
+            optionsContainer.innerHTML = moodOptions.map(mood => `
+                <button type="button" data-mood-id="${mood.id}" aria-label="${mood.label}" aria-pressed="${mood.id === selectedMoodId}"
+                    class="mood-option min-w-0 rounded-xl border px-1 py-2 text-center transition-all hover:-translate-y-0.5 ${mood.id === selectedMoodId ? 'border-indigo-200 bg-indigo-50 shadow-sm' : 'border-transparent bg-slate-50'}">
+                    <span class="block text-xl leading-6">${mood.emoji}</span>
+                    <span class="mt-1 block truncate text-[9px] font-bold text-slate-500">${mood.label}</span>
+                </button>
+            `).join('');
+
+            optionsContainer.querySelectorAll('.mood-option').forEach(button => {
+                button.addEventListener('click', () => {
+                    selectedMoodId = button.dataset.moodId;
+                    renderMoodOptions();
+                    updateMoodLabel();
+                });
+            });
+        }
+
+        function updateMoodLabel() {
+            const mood = getMood(selectedMoodId);
+            document.getElementById('mood-selected-label').textContent = `Humor de hoje: ${mood.emoji} ${mood.label}`;
+        }
+
+        function renderMoodCalendar() {
+            const calendar = document.getElementById('mood-calendar');
+            const records = getMoodRecords();
+            const today = new Date();
+            const todayKey = getLocalDateKey(today);
+            const firstDay = new Date(today);
+            firstDay.setDate(today.getDate() - 29);
+            const leadingDays = firstDay.getDay();
+            const days = [];
+
+            for (let index = 0; index < leadingDays; index += 1) days.push('<span aria-hidden="true"></span>');
+            for (let index = 0; index < 30; index += 1) {
+                const date = new Date(firstDay);
+                date.setDate(firstDay.getDate() + index);
+                const dateKey = getLocalDateKey(date);
+                const isToday = dateKey === todayKey;
+                const mood = getMood(isToday ? selectedMoodId : (records[dateKey] || 'normal'));
+                const todayClasses = isToday ? 'border-indigo-300 bg-indigo-50 ring-1 ring-indigo-100' : 'border-slate-100 bg-slate-50';
+                days.push(`
+                    <button type="button" data-date="${dateKey}" ${isToday ? '' : 'disabled'} aria-label="${date.toLocaleDateString('pt-BR')}: ${mood.label}${isToday ? ', hoje' : ''}"
+                        class="rounded-lg border ${todayClasses} p-1 text-center ${isToday ? 'cursor-pointer hover:border-indigo-400' : 'cursor-default opacity-80'}">
+                        <span class="block text-[9px] font-bold text-slate-400">${date.getDate()}</span>
+                        <span class="block text-base leading-5">${mood.emoji}</span>
+                    </button>
+                `);
+            }
+
+            calendar.innerHTML = days.join('');
+            const todayButton = calendar.querySelector(`[data-date="${todayKey}"]`);
+            if (todayButton) todayButton.addEventListener('click', () => {
+                selectedMoodId = records[todayKey] || 'normal';
+                renderMoodOptions();
+                updateMoodLabel();
+            });
+        }
+
+        function refreshMoodCard() {
+            const todayKey = getLocalDateKey();
+            const records = getMoodRecords();
+            selectedMoodId = records[todayKey] || 'normal';
+            renderMoodOptions();
+            updateMoodLabel();
+            renderMoodCalendar();
+        }
+
+        function initMoodCard() {
+            refreshMoodCard();
+
+            document.getElementById('confirm-mood').addEventListener('click', () => {
+                const todayKey = getLocalDateKey();
+                saveMoodRecord(todayKey, selectedMoodId || 'normal');
+                const mood = getMood(selectedMoodId);
+                document.getElementById('mood-feedback').textContent = `Humor ${mood.label.toLowerCase()} salvo hoje.`;
+                renderMoodCalendar();
+            });
+
+            document.getElementById('toggle-mood-history').addEventListener('click', event => {
+                const history = document.getElementById('mood-history');
+                const expanded = history.classList.toggle('hidden') === false;
+                history.setAttribute('aria-hidden', String(!expanded));
+                event.currentTarget.setAttribute('aria-expanded', String(expanded));
+                event.currentTarget.setAttribute('aria-label', expanded ? 'Ocultar histórico de humor' : 'Mostrar histórico de humor');
+                event.currentTarget.innerHTML = `<i data-lucide="${expanded ? 'minus' : 'plus'}" class="w-4 h-4"></i>`;
+                lucide.createIcons();
+            });
+        }
+
+        const data = {
+            dia: { title: "Meta Diária", date: "06 Setembro", valor: "R$ 2.450", meta: "R$ 3.500", falta: "R$ 1.050", progress: 70, badge: "Bronze", color: "tier-bronze" },
+            semana: { title: "Meta Semanal", date: "04 Set - 10 Set", valor: "R$ 12.450", meta: "R$ 20.000", falta: "R$ 7.550", progress: 62, badge: "Prata", color: "tier-silver" },
+            mes: { title: "Meta Mensal", date: "01 Set - 30 Set", valor: "R$ 38.200", meta: "R$ 50.000", falta: "R$ 11.800", progress: 76, badge: "Ouro", color: "tier-gold" }
+        };
+
+        function switchPeriod(p) {
+            ['dia', 'semana', 'mes'].forEach(item => {
+                document.getElementById('btn-' + item).classList.remove('bg-white', 'shadow-sm', 'text-indigo-600');
+            });
+            document.getElementById('btn-' + p).classList.add('bg-white', 'shadow-sm', 'text-indigo-600');
+
+            document.getElementById('period-title').innerText = data[p].title;
+            document.getElementById('period-date').innerText = data[p].date;
+            document.getElementById('total-vendas').innerText = data[p].valor;
+            document.getElementById('meta-valor').innerText = data[p].meta;
+            document.getElementById('falta-valor').innerText = data[p].falta;
+            document.getElementById('progress-fill').style.width = data[p].progress + '%';
+            
+            const badge = document.getElementById('badge-nivel');
+            badge.innerText = data[p].badge;
+            badge.className = `text-[10px] text-white font-black px-3 py-1 rounded-full uppercase ${data[p].color}`;
+        }
+    </script>
+</body>
+</html>
