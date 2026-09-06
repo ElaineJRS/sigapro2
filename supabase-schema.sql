@@ -100,11 +100,30 @@ create table if not exists public.atendimentos (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.metas (
+  id uuid primary key default gen_random_uuid(),
+  loja_id uuid not null references public.lojas(id) on delete cascade,
+  vendedor_id uuid not null references public.perfis(id) on delete cascade,
+  semana_inicio date not null,
+  semana_fim date not null,
+  bronze numeric(12,2) not null default 0 check (bronze >= 0),
+  prata numeric(12,2) not null default 0 check (prata >= bronze),
+  ouro numeric(12,2) not null default 0 check (ouro >= prata),
+  diamante numeric(12,2) not null check (diamante > 0 and diamante >= ouro),
+  mes_referencia date not null,
+  meta_mensal numeric(12,2) not null default 0 check (meta_mensal >= 0),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  check (semana_fim >= semana_inicio),
+  unique (vendedor_id, semana_inicio, mes_referencia)
+);
+
 create index if not exists perfis_loja_id_idx on public.perfis(loja_id);
 create index if not exists tarefas_responsavel_data_idx on public.tarefas(responsavel_id, data);
 create index if not exists vendas_vendedor_data_idx on public.vendas(vendedor_id, data_hora);
 create index if not exists atendimentos_vendedor_data_idx on public.atendimentos(vendedor_id, data_hora);
 create index if not exists condicionais_vendedor_status_idx on public.condicionais(vendedor_id, status);
+create index if not exists metas_vendedor_periodo_idx on public.metas(vendedor_id, semana_inicio, semana_fim, mes_referencia);
 
 create or replace function public.set_updated_at()
 returns trigger language plpgsql as $$
@@ -126,6 +145,8 @@ drop trigger if exists condicionais_set_updated_at on public.condicionais;
 create trigger condicionais_set_updated_at before update on public.condicionais for each row execute function public.set_updated_at();
 drop trigger if exists atendimentos_set_updated_at on public.atendimentos;
 create trigger atendimentos_set_updated_at before update on public.atendimentos for each row execute function public.set_updated_at();
+drop trigger if exists metas_set_updated_at on public.metas;
+create trigger metas_set_updated_at before update on public.metas for each row execute function public.set_updated_at();
 
 alter table public.lojas enable row level security;
 alter table public.perfis enable row level security;
@@ -133,12 +154,13 @@ alter table public.tarefas enable row level security;
 alter table public.vendas enable row level security;
 alter table public.condicionais enable row level security;
 alter table public.atendimentos enable row level security;
+alter table public.metas enable row level security;
 
 -- O site usa login próprio para vendedores/gerentes, não supabase.auth.
 -- Estas policies permitem o funcionamento do cliente com a publishable key.
 -- Para produção, migre os acessos de equipe para Supabase Auth e restrinja por auth.uid().
 do $$ declare table_name text; begin
-  foreach table_name in array array['lojas','perfis','tarefas','vendas','condicionais','atendimentos'] loop
+  foreach table_name in array array['lojas','perfis','tarefas','vendas','condicionais','atendimentos','metas'] loop
     execute format('drop policy if exists siga_public_select on public.%I', table_name);
     execute format('drop policy if exists siga_public_insert on public.%I', table_name);
     execute format('drop policy if exists siga_public_update on public.%I', table_name);
