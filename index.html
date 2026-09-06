@@ -538,26 +538,31 @@
         };
 
         function databaseRowFromApp(table, item) {
-            if (table === 'tarefas') return { id: item.id, titulo: item.title, horario: item.time, responsavel_id: item.ownerId || effectiveUserId(), concluida: item.completed, observacao: item.observation || '', data: item.date, serie_id: item.seriesId || null, dias_repeticao: item.repeatDays || null, loja_id: getSession()?.lojaId || null };
+            if (table === 'tarefas') return { id: item.id, loja_id: getSession()?.lojaId || null, titulo: item.title, horario: item.time, owner: item.owner || 'user', responsavel_id: item.ownerId || effectiveUserId(), concluida: item.completed, observacao: item.observation || '', data: item.date, serie_id: item.seriesId || null, dias_repeticao: item.repeatDays || null };
             if (table === 'vendas') return { id: item.id, loja_id: getSession()?.lojaId || null, vendedor_id: item.userId || effectiveUserId(), cliente: item.client || '', valor: item.value, data_hora: item.datetime || item.dateTime, produtos: item.products || [] };
-            if (table === 'atendimentos') return { id: item.id, loja_id: getSession()?.lojaId || null, vendedor_id: item.userId || effectiveUserId(), cliente: item.client || '', resultado: item.outcome, telefone: item.phone || '', observacao: item.observation || '', produtos: item.products || [], data_hora: item.datetime || item.dateTime };
-            if (table === 'condicionais') return { id: item.id, loja_id: getSession()?.lojaId || null, vendedor_id: item.userId || effectiveUserId(), cliente: item.client, telefone: item.phone, observacao: item.observation || '', produtos: item.products || [], prazo: item.dueDate || item.date, status: item.status || 'open' };
+            if (table === 'atendimentos') return { id: item.id, loja_id: getSession()?.lojaId || null, vendedor_id: item.userId || effectiveUserId(), cliente: item.client || '', resultado: item.outcome, resultado_label: item.outcomeLabel || '', valor: item.value || 0, telefone: item.phone || '', observacao: item.notes || '', produtos: item.products || [], produtos_apresentados: item.shownProducts || [], demanda: item.demand || '', venda_id: item.saleId || null, condicional_id: item.conditionalId || null, data_hora: item.datetime || item.dateTime };
+            if (table === 'condicionais') return { id: item.id, loja_id: getSession()?.lojaId || null, vendedor_id: item.userId || effectiveUserId(), cliente: item.client, telefone: item.phone, observacao: item.observation || '', produtos: item.products || [], prazo: item.dueDate || null, status: item.status || 'aberta', task_id: item.taskId || null, created_at: item.createdAt };
             return item;
         }
 
         function databaseRowToApp(table, row) {
-            if (table === 'tarefas') return { ...row, title: row.titulo ?? row.title, time: row.horario ?? row.time, ownerId: row.responsavel_id ?? row.ownerId, completed: row.concluida ?? row.completed ?? false, observation: row.observacao ?? row.observation ?? '', date: row.data ?? row.date, seriesId: row.serie_id ?? row.seriesId, repeatDays: row.dias_repeticao ?? row.repeatDays };
+            if (table === 'tarefas') return { ...row, title: row.titulo ?? row.title, time: row.horario ?? row.time, owner: row.owner ?? 'user', ownerId: row.responsavel_id ?? row.ownerId, completed: row.concluida ?? row.completed ?? false, observation: row.observacao ?? row.observation ?? '', date: row.data ?? row.date, seriesId: row.serie_id ?? row.seriesId, repeatDays: row.dias_repeticao ?? row.repeatDays };
             if (table === 'vendas') return { ...row, userId: row.vendedor_id ?? row.userId, client: row.cliente ?? row.client ?? '', value: row.valor ?? row.value, datetime: row.data_hora ?? row.datetime, products: row.produtos ?? row.products ?? [] };
-            if (table === 'atendimentos') return { ...row, userId: row.vendedor_id ?? row.userId, client: row.cliente ?? row.client ?? '', outcome: row.resultado ?? row.outcome, phone: row.telefone ?? row.phone ?? '', observation: row.observacao ?? row.observation ?? '', products: row.produtos ?? row.products ?? [], datetime: row.data_hora ?? row.datetime };
-            if (table === 'condicionais') return { ...row, userId: row.vendedor_id ?? row.userId, client: row.cliente ?? row.client, phone: row.telefone ?? row.phone, observation: row.observacao ?? row.observation ?? '', products: row.produtos ?? row.products ?? [], dueDate: row.prazo ?? row.dueDate, status: row.status ?? 'open' };
+            if (table === 'atendimentos') return { ...row, userId: row.vendedor_id ?? row.userId, client: row.cliente ?? row.client ?? '', outcome: row.resultado ?? row.outcome, outcomeLabel: row.resultado_label ?? row.outcomeLabel, value: row.valor ?? row.value ?? 0, phone: row.telefone ?? row.phone ?? '', notes: row.observacao ?? row.notes ?? '', products: row.produtos ?? row.products ?? [], shownProducts: row.produtos_apresentados ?? row.shownProducts ?? [], demand: row.demanda ?? row.demand ?? '', saleId: row.venda_id ?? row.saleId, conditionalId: row.condicional_id ?? row.conditionalId, datetime: row.data_hora ?? row.datetime };
+            if (table === 'condicionais') return { ...row, userId: row.vendedor_id ?? row.userId, client: row.cliente ?? row.client, phone: row.telefone ?? row.phone, observation: row.observacao ?? row.observation ?? '', products: row.produtos ?? row.products ?? [], dueDate: row.prazo ?? row.dueDate, status: row.status ?? 'aberta', taskId: row.task_id ?? row.taskId, createdAt: row.created_at ?? row.createdAt };
             return row;
         }
 
-        async function syncStoredList(storageKey, list) {
+        async function syncStoredList(storageKey, list, removedIds = []) {
             const baseKey = storageKey.replace(/::[^:]+$/, '');
             const table = storageKey === lojasStorageKey ? 'lojas' : storageKey === usuariosStorageKey ? 'perfis' : databaseTableByStorageKey[baseKey];
             if (!table) return;
-            const rows = list.map(item => table === 'lojas' ? { id: item.id, nome: item.name, slug: item.slug, criado_em: item.createdAt } : table === 'perfis' ? { id: item.id, loja_id: item.lojaId, nome: item.name, cargo: item.role, username: item.username, password: item.password, slug: item.slug, full_slug: item.fullSlug, created_at: item.createdAt } : databaseRowFromApp(table, item));
+            if (removedIds.length) {
+                const { error: deleteError } = await sigaSupabase.from(table).delete().in('id', removedIds);
+                if (deleteError) console.warn(`Falha ao excluir de ${table}:`, deleteError.message);
+            }
+            const rows = list.map(item => table === 'lojas' ? { id: item.id, nome: item.name, slug: item.slug, configuracoes: item.configuracoes || {}, created_at: item.createdAt } : table === 'perfis' ? { id: item.id, loja_id: item.lojaId, nome: item.name, cargo: item.role, username: item.username, password: item.password, slug: item.slug, full_slug: item.fullSlug, created_at: item.createdAt } : databaseRowFromApp(table, item));
+            if (!rows.length) return;
             const { error } = await sigaSupabase.from(table).upsert(rows);
             if (error) console.warn(`Falha ao sincronizar ${table}:`, error.message);
         }
@@ -590,12 +595,12 @@
         function getLojas() {
             try { const saved = JSON.parse(localStorage.getItem(lojasStorageKey)); return Array.isArray(saved) ? saved : []; } catch (error) { return []; }
         }
-        function saveLojas(list) { localStorage.setItem(lojasStorageKey, JSON.stringify(list)); syncStoredList(lojasStorageKey, list); }
+        function saveLojas(list) { const previous = getLojas(); localStorage.setItem(lojasStorageKey, JSON.stringify(list)); syncStoredList(lojasStorageKey, list, previous.filter(item => !list.some(next => next.id === item.id)).map(item => item.id)); }
 
         function getUsuarios() {
             try { const saved = JSON.parse(localStorage.getItem(usuariosStorageKey)); return Array.isArray(saved) ? saved : []; } catch (error) { return []; }
         }
-        function saveUsuarios(list) { localStorage.setItem(usuariosStorageKey, JSON.stringify(list)); syncStoredList(usuariosStorageKey, list); }
+        function saveUsuarios(list) { const previous = getUsuarios(); localStorage.setItem(usuariosStorageKey, JSON.stringify(list)); syncStoredList(usuariosStorageKey, list, previous.filter(item => !list.some(next => next.id === item.id)).map(item => item.id)); }
 
         function accessLinkFor(usuario) {
             return `${location.origin}${location.pathname}#acesso/${usuario.fullSlug}`;
@@ -890,7 +895,7 @@
                 const name = document.getElementById('loja-name-input').value.trim();
                 if (!name) return;
                 const lojas = getLojas();
-                lojas.push({ id: `loja-${Date.now()}`, name, slug: uniqueSlugFor(lojas, name), createdAt: new Date().toISOString() });
+                lojas.push({ id: crypto.randomUUID(), name, slug: uniqueSlugFor(lojas, name), createdAt: new Date().toISOString() });
                 saveLojas(lojas);
                 event.target.reset();
                 renderMasterPanel();
@@ -922,7 +927,7 @@
                     saveUsuarios(usuarios.map(item => item.id === editingId ? { ...item, name, role, username, password } : item));
                 } else {
                     const personSlug = uniqueSlugFor(usuarios.filter(item => item.lojaId === selectedLojaId), name);
-                    usuarios.push({ id: `usuario-${Date.now()}`, lojaId: selectedLojaId, role, name, username, password, slug: personSlug, fullSlug: `${loja.slug}-${personSlug}`, createdAt: new Date().toISOString() });
+                    usuarios.push({ id: crypto.randomUUID(), lojaId: selectedLojaId, role, name, username, password, slug: personSlug, fullSlug: `${loja.slug}-${personSlug}`, createdAt: new Date().toISOString() });
                     saveUsuarios(usuarios);
                 }
                 event.target.reset();
@@ -982,10 +987,8 @@
 
         async function bootstrapSupabase() {
             const { data } = await sigaSupabase.auth.getSession();
-            if (data.session) {
-                if (!getSession()) saveSession({ type: 'master' });
-                await hydrateFromSupabase();
-            }
+            if (data.session && !getSession()) saveSession({ type: 'master' });
+            await hydrateFromSupabase();
             applyRoute();
         }
         bindAuthForms();
@@ -1013,8 +1016,9 @@
         }
 
         function saveTasks(tasks) {
+            const previous = getTasks();
             localStorage.setItem(taskStorageKey(), JSON.stringify(tasks));
-            syncStoredList(taskStorageKey(), tasks);
+            syncStoredList(taskStorageKey(), tasks, previous.filter(item => !tasks.some(next => next.id === item.id)).map(item => item.id));
         }
 
         function taskDateValue(task) {
@@ -1026,7 +1030,7 @@
         }
 
         function createRecurringTasks(title, time, startDate, repeatDays) {
-            const seriesId = `series-${Date.now()}`;
+            const seriesId = crypto.randomUUID();
             const tasks = [];
             const cursor = new Date(`${startDate}T12:00:00`);
             const endDate = new Date(cursor);
@@ -1274,8 +1278,9 @@
         }
 
         function saveSales(sales) {
+            const previous = getSales();
             localStorage.setItem(salesStorageKey(), JSON.stringify(sales));
-            syncStoredList(salesStorageKey(), sales);
+            syncStoredList(salesStorageKey(), sales, previous.filter(item => !sales.some(next => next.id === item.id)).map(item => item.id));
         }
 
         function salesInPeriod() {
@@ -1362,7 +1367,7 @@
             try { const saved = JSON.parse(localStorage.getItem(serviceStorageKey())); return Array.isArray(saved) ? saved : []; } catch (error) { return []; }
         }
 
-        function saveServices(services) { localStorage.setItem(serviceStorageKey(), JSON.stringify(services)); syncStoredList(serviceStorageKey(), services); }
+        function saveServices(services) { const previous = getServices(); localStorage.setItem(serviceStorageKey(), JSON.stringify(services)); syncStoredList(serviceStorageKey(), services, previous.filter(item => !services.some(next => next.id === item.id)).map(item => item.id)); }
 
         function servicesInPeriod() {
             const savedServices = getServices();
@@ -1411,7 +1416,7 @@
             try { const saved = JSON.parse(localStorage.getItem(conditionalStorageKey())); return Array.isArray(saved) ? saved : []; } catch (error) { return []; }
         }
 
-        function saveConditionals(list) { localStorage.setItem(conditionalStorageKey(), JSON.stringify(list)); syncStoredList(conditionalStorageKey(), list); }
+        function saveConditionals(list) { const previous = getConditionals(); localStorage.setItem(conditionalStorageKey(), JSON.stringify(list)); syncStoredList(conditionalStorageKey(), list, previous.filter(item => !list.some(next => next.id === item.id)).map(item => item.id)); }
 
         function conditionalDeadline(conditional) {
             return new Date(new Date(conditional.createdAt).getTime() + 24 * 60 * 60 * 1000);
@@ -1481,14 +1486,14 @@
                 saveTasks(tasks.map(item => item.id === existingTaskId ? { ...item, title: taskTitle, time: taskTime, date: taskDate } : item));
                 return existingTaskId;
             }
-            const taskId = `conditional-task-${Date.now()}`;
+            const taskId = crypto.randomUUID();
             saveTasks([...tasks, { id: taskId, title: taskTitle, time: taskTime, owner: currentTaskOwnerRole(), completed: false, observation: '', date: taskDate }]);
             return taskId;
         }
 
         function upsertConditionalRecord({ id, client, phone, products, observation, taskDate, taskTime, status }) {
             const previous = id ? getConditionals().find(item => item.id === id) : null;
-            const conditional = { id: id || `conditional-${Date.now()}`, client, phone, products, observation, createdAt: previous?.createdAt || new Date().toISOString(), status: previous?.status || status || 'aberta', taskId: previous?.taskId || null };
+            const conditional = { id: id || crypto.randomUUID(), client, phone, products, observation, createdAt: previous?.createdAt || new Date().toISOString(), status: previous?.status || status || 'aberta', taskId: previous?.taskId || null };
             conditional.taskId = upsertConditionalTask(conditional.taskId, client, taskDate, taskTime);
             const conditionals = getConditionals();
             saveConditionals(id ? conditionals.map(item => item.id === id ? conditional : item) : [...conditionals, conditional]);
@@ -1782,7 +1787,7 @@
                 const repeatEnabled = document.getElementById('task-repeat-toggle').checked;
                 const repeatDays = Array.from(document.querySelectorAll('.task-repeat-day:checked')).map(input => Number(input.value));
                 const tasks = getTasks();
-                const newTasks = repeatEnabled && repeatDays.length ? createRecurringTasks(title, time, currentSelectedDate, repeatDays) : [{ id: `user-${Date.now()}`, title, time, owner: currentTaskOwnerRole(), completed: false, observation: '', date: currentSelectedDate }];
+                const newTasks = repeatEnabled && repeatDays.length ? createRecurringTasks(title, time, currentSelectedDate, repeatDays) : [{ id: crypto.randomUUID(), title, time, owner: currentTaskOwnerRole(), completed: false, observation: '', date: currentSelectedDate }];
                 tasks.push(...newTasks);
                 saveTasks(tasks);
                 event.target.reset();
@@ -1831,7 +1836,7 @@
                     return;
                 }
                 const sales = getSales();
-                const sale = { id: editingSaleId || `sale-${Date.now()}`, client: document.getElementById('sale-client-input').value.trim(), value, datetime, date: datetime.slice(0, 10), products };
+                const sale = { id: editingSaleId || crypto.randomUUID(), client: document.getElementById('sale-client-input').value.trim(), value, datetime, date: datetime.slice(0, 10), products };
                 const updatedSales = editingSaleId ? sales.map(item => item.id === editingSaleId ? sale : item) : [...sales, sale];
                 saveSales(updatedSales);
                 event.target.reset();
@@ -1854,9 +1859,9 @@
                 if (isConditional && (!conditionalTaskDate || !conditionalTaskTime)) return window.alert('Escolha a data e o horário da tarefa de cobrança.');
                 const previousService = editingServiceId ? getServices().find(item => item.id === editingServiceId) : null; const existingSaleId = previousService?.saleId; const existingConditionalId = previousService?.conditionalId; const now = new Date(); const datetime = previousService?.datetime || now.toISOString(); const labels = { converted: 'Venda realizada', conditional: 'Levou condicional', authorized: 'Venda permitida / aguardando fechamento', 'no-product': 'Não tínhamos o produto', 'just-looking': 'Só estava olhando', expensive: 'Achou caro', 'no-decision': 'Não tomou decisão', competitor: 'Preferiu a concorrência', 'return-later': 'Vai voltar depois', other: 'Outro motivo' };
                 const client = document.getElementById('service-client').value.trim();
-                const service = { id: editingServiceId || `service-${Date.now()}`, client, outcome, outcomeLabel: labels[outcome], value: converted ? value : 0, products: converted ? products : (isConditional ? conditionalProducts : []), shownProducts: (!converted && !isConditional) ? shownProducts : [], demand: document.getElementById('service-demand').value.trim(), notes: document.getElementById('service-notes').value.trim(), datetime, date: datetime.slice(0, 10), saleId: existingSaleId, conditionalId: existingConditionalId };
+                const service = { id: editingServiceId || crypto.randomUUID(), client, outcome, outcomeLabel: labels[outcome], value: converted ? value : 0, products: converted ? products : (isConditional ? conditionalProducts : []), shownProducts: (!converted && !isConditional) ? shownProducts : [], demand: document.getElementById('service-demand').value.trim(), notes: document.getElementById('service-notes').value.trim(), datetime, date: datetime.slice(0, 10), saleId: existingSaleId, conditionalId: existingConditionalId };
                 const services = getServices(); saveServices(editingServiceId ? services.map(item => item.id === editingServiceId ? service : item) : [...services, service]);
-                if (converted) { const sales = getSales(); const sale = { id: existingSaleId || `sale-${Date.now()}`, client, value, datetime, date: service.date, products }; saveSales(existingSaleId ? sales.map(item => item.id === existingSaleId ? sale : item) : [...sales, sale]); service.saleId = sale.id; saveServices(getServices().map(item => item.id === service.id ? service : item)); } else if (existingSaleId) saveSales(getSales().filter(item => item.id !== existingSaleId));
+                if (converted) { const sales = getSales(); const sale = { id: existingSaleId || crypto.randomUUID(), client, value, datetime, date: service.date, products }; saveSales(existingSaleId ? sales.map(item => item.id === existingSaleId ? sale : item) : [...sales, sale]); service.saleId = sale.id; saveServices(getServices().map(item => item.id === service.id ? service : item)); } else if (existingSaleId) saveSales(getSales().filter(item => item.id !== existingSaleId));
                 if (isConditional) { const conditional = upsertConditionalRecord({ id: existingConditionalId, client, phone, products: conditionalProducts, observation: service.notes, taskDate: conditionalTaskDate, taskTime: conditionalTaskTime }); service.conditionalId = conditional.id; saveServices(getServices().map(item => item.id === service.id ? service : item)); } else if (existingConditionalId) { const conditional = getConditionals().find(item => item.id === existingConditionalId); saveConditionals(getConditionals().filter(item => item.id !== existingConditionalId)); if (conditional?.taskId) saveTasks(getTasks().filter(item => item.id !== conditional.taskId)); renderConditionals(); renderDashboardConditionals(); }
                 closeServiceModal(); renderServices(); renderSales(); renderDashboardServices(); renderConditionals(); renderDashboardConditionals(); refreshTaskViews();
             });
