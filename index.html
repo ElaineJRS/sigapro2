@@ -119,6 +119,7 @@
                 <div class="flex items-center gap-2">
                     <select id="manager-vendor-select" class="rounded-lg border border-amber-200 bg-white px-2 py-1 text-xs font-bold text-slate-700"></select>
                     <button type="button" id="manager-overview-button" class="rounded-lg bg-amber-500 px-3 py-1.5 text-[10px] font-black text-white hover:bg-amber-600">Visão geral</button>
+                    <button type="button" id="manager-goals-button" class="rounded-lg bg-indigo-600 px-3 py-1.5 text-[10px] font-black text-white hover:bg-indigo-700">Metas</button>
                 </div>
             </div>
         </div>
@@ -476,6 +477,11 @@
     <section id="manager-overview-page" class="hidden max-w-5xl mx-auto p-4 space-y-6">
         <div class="flex items-center gap-3"><button type="button" data-back-dashboard aria-label="Voltar ao início" class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600"><i data-lucide="arrow-left" class="h-4 w-4"></i></button><div><h2 class="text-2xl font-black text-slate-800">Visão geral de tarefas</h2><p class="mt-1 text-xs font-medium text-slate-500">Todas as tarefas da equipe, com o nome do vendedor</p></div></div>
         <div id="manager-overview-list" class="space-y-3"></div>
+    </section>
+
+    <!-- CONFIGURAÇÃO DE METAS DO GERENTE -->
+    <section id="manager-goals-page" class="hidden max-w-5xl mx-auto p-4 space-y-6">
+        <div class="flex items-center gap-3"><button type="button" data-back-dashboard aria-label="Voltar ao início" class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600"><i data-lucide="arrow-left" class="h-4 w-4"></i></button><div><h2 class="text-2xl font-black text-slate-800">Metas da equipe</h2><p class="mt-1 text-xs font-medium text-slate-500">Crie e edite as metas de cada vendedor.</p></div></div>
         <section id="goal-management-section" class="hidden rounded-[2rem] border border-amber-100 bg-white p-6 shadow-sm">
             <div class="mb-4"><h3 class="text-lg font-black text-slate-800">Metas da equipe</h3><p class="mt-1 text-xs text-slate-500">Defina os níveis semanais, o período e a meta mensal.</p></div>
             <form id="goal-form" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -702,14 +708,15 @@
                 renderMasterPanel();
                 return;
             }
-            if (hash === 'app' || hash === 'manager-overview') {
+            if (hash === 'app' || hash === 'manager-overview' || hash === 'manager-goals') {
                 if (session?.type !== 'user') { location.hash = ''; return; }
-                if (hash === 'manager-overview' && session.role !== 'gerente') { location.hash = 'app'; return; }
+                if ((hash === 'manager-overview' || hash === 'manager-goals') && session.role !== 'gerente') { location.hash = 'app'; return; }
                 hideAllViews();
                 document.getElementById('app-shell').classList.remove('hidden');
                 startAppIfNeeded();
                 renderManagerBar();
                 if (hash === 'manager-overview') showPage('manager-overview');
+                if (hash === 'manager-goals') showPage('manager-goals');
                 return;
             }
             if (session?.type === 'master') { location.hash = 'master'; return; }
@@ -781,6 +788,7 @@
                 refreshAllAppViews();
             });
             document.getElementById('manager-overview-button').addEventListener('click', () => showPage('manager-overview'));
+            document.getElementById('manager-goals-button').addEventListener('click', () => { location.hash = 'manager-goals'; });
             document.getElementById('goal-form').addEventListener('submit', event => {
                 event.preventDefault();
                 const session = getSession();
@@ -788,12 +796,15 @@
                 const weekEnd = document.getElementById('goal-week-end-input').value;
                 const month = document.getElementById('goal-month-input').value;
                 if (weekEnd < weekStart) return;
-                const goal = { id: crypto.randomUUID(), lojaId: session.lojaId, userId: document.getElementById('goal-user-input').value, weekStart, weekEnd, bronze: Number(document.getElementById('goal-bronze-input').value), silver: Number(document.getElementById('goal-silver-input').value), gold: Number(document.getElementById('goal-gold-input').value), diamond: Number(document.getElementById('goal-diamond-input').value), month, monthly: Number(document.getElementById('goal-monthly-input').value) };
+                const userId = document.getElementById('goal-user-input').value;
+                const existingGoal = getGoals().find(item => item.lojaId === session.lojaId && item.userId === userId && item.weekStart === weekStart && item.month === month);
+                const goal = { id: existingGoal?.id || crypto.randomUUID(), lojaId: session.lojaId, userId, weekStart, weekEnd, bronze: Number(document.getElementById('goal-bronze-input').value), silver: Number(document.getElementById('goal-silver-input').value), gold: Number(document.getElementById('goal-gold-input').value), diamond: Number(document.getElementById('goal-diamond-input').value), month, monthly: Number(document.getElementById('goal-monthly-input').value) };
                 const goals = getGoals().filter(item => !(item.lojaId === goal.lojaId && item.userId === goal.userId && item.weekStart === weekStart && item.month === month));
                 saveGoals([...goals, goal]);
                 document.getElementById('goal-form-feedback').textContent = 'Metas salvas com sucesso.';
                 renderGoalCard();
             });
+            ['goal-user-input', 'goal-week-start-input', 'goal-month-input'].forEach(id => document.getElementById(id).addEventListener('change', renderGoalForm));
             document.getElementById('goal-markers').addEventListener('click', event => {
                 const marker = event.target.closest('[data-goal-tier]');
                 if (!marker) return;
@@ -805,8 +816,22 @@
         }
 
         function isTaskOverdueRaw(task, now) {
+            if (task.date && task.date < getLocalDateKey(now)) return true;
+            if (task.date && task.date > getLocalDateKey(now)) return false;
             const [hours, minutes] = task.time.split(':').map(Number);
             return hours < now.getHours() || (hours === now.getHours() && minutes < now.getMinutes());
+        }
+
+        function managerTaskStatusClasses(task) {
+            if (task.completed) return 'border-emerald-200 bg-emerald-50';
+            if (isTaskOverdueRaw(task, new Date())) return 'border-red-200 bg-red-50';
+            return 'border-amber-200 bg-amber-50';
+        }
+
+        function managerTaskStatusLabel(task) {
+            if (task.completed) return '<span class="font-black text-emerald-600">Concluída</span>';
+            if (isTaskOverdueRaw(task, new Date())) return '<span class="font-black text-red-600">Atrasada</span>';
+            return '<span class="font-black text-amber-600">Pendente</span>';
         }
 
         function collectAllTasksForStore(lojaId) {
@@ -831,20 +856,20 @@
             const session = getSession();
             const tasks = collectAllTasksForStore(session.lojaId);
             document.getElementById('manager-overview-list').innerHTML = tasks.length ? tasks.map(task => `
-                <article class="flex items-center gap-3 rounded-2xl border p-3 ${task.completed ? 'border-emerald-200 bg-emerald-50' : 'border-slate-100 bg-white'}">
-                    <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border-2 ${task.completed ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-indigo-200 bg-white'}">${task.completed ? '<i data-lucide="check" class="w-4 h-4"></i>' : ''}</div>
+                <article class="flex items-center gap-3 rounded-2xl border p-3 ${managerTaskStatusClasses(task)}">
+                    <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border-2 ${task.completed ? 'border-emerald-500 bg-emerald-500 text-white' : isTaskOverdueRaw(task, new Date()) ? 'border-red-400 bg-red-100 text-red-600' : 'border-amber-400 bg-amber-100 text-amber-600'}">${task.completed ? '<i data-lucide="check" class="w-4 h-4"></i>' : isTaskOverdueRaw(task, new Date()) ? '<i data-lucide="clock-alert" class="w-4 h-4"></i>' : ''}</div>
                     <div class="min-w-0 flex-1">
-                        <p class="truncate text-xs font-bold ${task.completed ? 'text-emerald-800 line-through' : 'text-slate-700'}">${escapeHtml(task.title)}</p>
+                        <p class="truncate text-xs font-bold ${task.completed ? 'text-emerald-800 line-through' : isTaskOverdueRaw(task, new Date()) ? 'text-red-800' : 'text-slate-700'}">${escapeHtml(task.title)}</p>
                         <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-semibold text-slate-400">
                             <span class="flex items-center gap-1"><i data-lucide="clock-3" class="w-3 h-3"></i>${task.time}</span>
                             <span class="rounded-full bg-indigo-50 px-2 py-0.5 text-indigo-600">${escapeHtml(task.vendedorNome)}</span>
                             <span>${task.owner === 'manager' ? 'Gerente' : 'Vendedor'}</span>
+                            ${managerTaskStatusLabel(task)}
                         </div>
                     </div>
                 </article>
             `).join('') : '<p class="rounded-2xl bg-white p-4 text-xs text-slate-400">Nenhuma tarefa registrada pela equipe.</p>';
             lucide.createIcons();
-            renderGoalForm();
         }
 
         function getGoals() {
@@ -868,6 +893,7 @@
             const users = getUsuarios().filter(item => item.lojaId === session.lojaId && item.role === 'vendedor');
             const select = document.getElementById('goal-user-input');
             select.innerHTML = users.map(user => `<option value="${user.id}">${escapeHtml(user.name)} · ${user.role}</option>`).join('');
+            if (users.some(user => user.id === session.viewingUserId)) select.value = session.viewingUserId;
             const today = getLocalDateKey();
             const month = today.slice(0, 7);
             if (!document.getElementById('goal-week-start-input').value) {
@@ -878,6 +904,18 @@
                 date.setDate(date.getDate() + 6);
                 document.getElementById('goal-week-end-input').value = getLocalDateKey(date);
                 document.getElementById('goal-month-input').value = month;
+            }
+            const selectedUser = document.getElementById('goal-user-input').value;
+            const selectedWeek = document.getElementById('goal-week-start-input').value;
+            const selectedMonth = document.getElementById('goal-month-input').value;
+            const existingGoal = getGoals().find(item => item.lojaId === session.lojaId && item.userId === selectedUser && item.weekStart === selectedWeek && item.month === selectedMonth);
+            if (existingGoal) {
+                document.getElementById('goal-week-end-input').value = existingGoal.weekEnd;
+                document.getElementById('goal-bronze-input').value = existingGoal.bronze;
+                document.getElementById('goal-silver-input').value = existingGoal.silver;
+                document.getElementById('goal-gold-input').value = existingGoal.gold;
+                document.getElementById('goal-diamond-input').value = existingGoal.diamond;
+                document.getElementById('goal-monthly-input').value = existingGoal.monthly;
             }
         }
 
@@ -1278,6 +1316,7 @@
             const servicePage = document.getElementById('service-page');
             const conditionalPage = document.getElementById('conditional-page');
             const managerOverviewPage = document.getElementById('manager-overview-page');
+            const managerGoalsPage = document.getElementById('manager-goals-page');
             const navInicio = document.getElementById('nav-inicio');
             const navTasks = document.getElementById('nav-tasks');
             const navSales = document.getElementById('nav-sales');
@@ -1286,7 +1325,7 @@
             const indicator = document.getElementById('nav-indicator');
             document.querySelectorAll('[data-desktop-page]').forEach(button => { const active = button.dataset.desktopPage === pageName; button.classList.toggle('bg-indigo-600', active); button.classList.toggle('text-white', active); button.classList.toggle('text-slate-500', !active); });
 
-            [tasksPage, salesPage, servicePage, conditionalPage, managerOverviewPage].forEach(page => { page.classList.remove('active'); page.classList.add('hidden'); });
+            [tasksPage, salesPage, servicePage, conditionalPage, managerOverviewPage, managerGoalsPage].forEach(page => { page.classList.remove('active'); page.classList.add('hidden'); });
             [navInicio, navTasks, navSales, navService, navConditional].forEach(nav => { nav.classList.add('text-slate-300'); nav.classList.remove('text-indigo-600'); });
 
             if (pageName === 'dashboard') {
@@ -1332,6 +1371,10 @@
                 dashboard.classList.add('hidden');
                 managerOverviewPage.classList.remove('hidden');
                 renderManagerOverview();
+            } else if (pageName === 'manager-goals') {
+                dashboard.classList.add('hidden');
+                managerGoalsPage.classList.remove('hidden');
+                renderGoalForm();
             }
         }
 
