@@ -6,6 +6,7 @@
     <title>SIGA - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -522,10 +523,54 @@
         lucide.createIcons();
 
         // ================= AUTENTICAÇÃO E MULTI-LOJA =================
-        const MASTER_CREDENTIALS = { email: 'admin@siga.com', password: 'admin123' };
+        const SUPABASE_URL = 'https://kqnfjtubsdxaatzfdlvf.supabase.co';
+        const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_DyoyiM0MvNNgsEmpsh7eWw_FqhfTshT';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
         const lojasStorageKey = 'siga-lojas';
         const usuariosStorageKey = 'siga-usuarios';
         const sessionStorageName = 'siga-sessao';
+
+        const databaseTableByStorageKey = {
+            'siga-tarefas': 'tarefas',
+            'siga-vendas': 'vendas',
+            'siga-atendimentos': 'atendimentos',
+            'siga-condicionais': 'condicionais'
+        };
+
+        function databaseRowFromApp(table, item) {
+            if (table === 'tarefas') return { id: item.id, titulo: item.title, horario: item.time, responsavel_id: item.ownerId || effectiveUserId(), concluida: item.completed, observacao: item.observation || '', data: item.date, serie_id: item.seriesId || null, dias_repeticao: item.repeatDays || null, loja_id: getSession()?.lojaId || null };
+            if (table === 'vendas') return { id: item.id, loja_id: getSession()?.lojaId || null, vendedor_id: item.userId || effectiveUserId(), cliente: item.client || '', valor: item.value, data_hora: item.datetime || item.dateTime, produtos: item.products || [] };
+            if (table === 'atendimentos') return { id: item.id, loja_id: getSession()?.lojaId || null, vendedor_id: item.userId || effectiveUserId(), cliente: item.client || '', resultado: item.outcome, telefone: item.phone || '', observacao: item.observation || '', produtos: item.products || [], data_hora: item.datetime || item.dateTime };
+            if (table === 'condicionais') return { id: item.id, loja_id: getSession()?.lojaId || null, vendedor_id: item.userId || effectiveUserId(), cliente: item.client, telefone: item.phone, observacao: item.observation || '', produtos: item.products || [], prazo: item.dueDate || item.date, status: item.status || 'open' };
+            return item;
+        }
+
+        function databaseRowToApp(table, row) {
+            if (table === 'tarefas') return { ...row, title: row.titulo ?? row.title, time: row.horario ?? row.time, ownerId: row.responsavel_id ?? row.ownerId, completed: row.concluida ?? row.completed ?? false, observation: row.observacao ?? row.observation ?? '', date: row.data ?? row.date, seriesId: row.serie_id ?? row.seriesId, repeatDays: row.dias_repeticao ?? row.repeatDays };
+            if (table === 'vendas') return { ...row, userId: row.vendedor_id ?? row.userId, client: row.cliente ?? row.client ?? '', value: row.valor ?? row.value, datetime: row.data_hora ?? row.datetime, products: row.produtos ?? row.products ?? [] };
+            if (table === 'atendimentos') return { ...row, userId: row.vendedor_id ?? row.userId, client: row.cliente ?? row.client ?? '', outcome: row.resultado ?? row.outcome, phone: row.telefone ?? row.phone ?? '', observation: row.observacao ?? row.observation ?? '', products: row.produtos ?? row.products ?? [], datetime: row.data_hora ?? row.datetime };
+            if (table === 'condicionais') return { ...row, userId: row.vendedor_id ?? row.userId, client: row.cliente ?? row.client, phone: row.telefone ?? row.phone, observation: row.observacao ?? row.observation ?? '', products: row.produtos ?? row.products ?? [], dueDate: row.prazo ?? row.dueDate, status: row.status ?? 'open' };
+            return row;
+        }
+
+        async function syncStoredList(storageKey, list) {
+            const baseKey = storageKey.replace(/::[^:]+$/, '');
+            const table = storageKey === lojasStorageKey ? 'lojas' : storageKey === usuariosStorageKey ? 'perfis' : databaseTableByStorageKey[baseKey];
+            if (!table) return;
+            const rows = list.map(item => table === 'lojas' ? { id: item.id, nome: item.name, slug: item.slug, criado_em: item.createdAt } : table === 'perfis' ? { id: item.id, loja_id: item.lojaId, nome: item.name, funcao: item.role, login: item.username, senha: item.password, slug: item.slug, link_slug: item.fullSlug, criado_em: item.createdAt } : databaseRowFromApp(table, item));
+            const { error } = await supabase.from(table).upsert(rows);
+            if (error) console.warn(`Falha ao sincronizar ${table}:`, error.message);
+        }
+
+        async function hydrateFromSupabase() {
+            const requests = [['lojas', lojasStorageKey], ['perfis', usuariosStorageKey], ...Object.entries(databaseTableByStorageKey).map(([key, table]) => [table, key])];
+            await Promise.all(requests.map(async ([table, storageKey]) => {
+                const { data, error } = await supabase.from(table).select('*');
+                if (error || !data) return;
+                const list = data.map(row => table === 'lojas' ? { ...row, name: row.nome ?? row.name, createdAt: row.criado_em ?? row.createdAt } : table === 'perfis' ? { ...row, lojaId: row.loja_id ?? row.lojaId, name: row.nome ?? row.name, role: row.funcao ?? row.role, username: row.login ?? row.username, password: row.senha ?? row.password, fullSlug: row.link_slug ?? row.fullSlug, createdAt: row.criado_em ?? row.createdAt } : databaseRowToApp(table, row));
+                localStorage.setItem(storageKey, JSON.stringify(list));
+            }));
+        }
 
         function slugify(text) {
             return String(text || '').toLowerCase().trim()
@@ -545,12 +590,12 @@
         function getLojas() {
             try { const saved = JSON.parse(localStorage.getItem(lojasStorageKey)); return Array.isArray(saved) ? saved : []; } catch (error) { return []; }
         }
-        function saveLojas(list) { localStorage.setItem(lojasStorageKey, JSON.stringify(list)); }
+        function saveLojas(list) { localStorage.setItem(lojasStorageKey, JSON.stringify(list)); syncStoredList(lojasStorageKey, list); }
 
         function getUsuarios() {
             try { const saved = JSON.parse(localStorage.getItem(usuariosStorageKey)); return Array.isArray(saved) ? saved : []; } catch (error) { return []; }
         }
-        function saveUsuarios(list) { localStorage.setItem(usuariosStorageKey, JSON.stringify(list)); }
+        function saveUsuarios(list) { localStorage.setItem(usuariosStorageKey, JSON.stringify(list)); syncStoredList(usuariosStorageKey, list); }
 
         function accessLinkFor(usuario) {
             return `${location.origin}${location.pathname}#acesso/${usuario.fullSlug}`;
@@ -582,7 +627,7 @@
             try { return JSON.parse(localStorage.getItem(sessionStorageName)); } catch (error) { return null; }
         }
         function saveSession(session) { localStorage.setItem(sessionStorageName, JSON.stringify(session)); }
-        function clearSession() { localStorage.removeItem(sessionStorageName); }
+        function clearSession() { localStorage.removeItem(sessionStorageName); supabase.auth.signOut(); }
 
         function effectiveUserId() {
             const session = getSession();
@@ -794,14 +839,18 @@
         }
 
         function bindAuthForms() {
-            document.getElementById('master-login-form').addEventListener('submit', event => {
+            document.getElementById('master-login-form').addEventListener('submit', async event => {
                 event.preventDefault();
                 const email = document.getElementById('master-email-input').value.trim();
                 const password = document.getElementById('master-password-input').value;
-                if (email !== MASTER_CREDENTIALS.email || password !== MASTER_CREDENTIALS.password) {
-                    document.getElementById('master-login-error').textContent = 'Credenciais inválidas.';
+                const errorLabel = document.getElementById('master-login-error');
+                errorLabel.textContent = '';
+                const { error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) {
+                    errorLabel.textContent = 'E-mail ou senha inválidos.';
                     return;
                 }
+                await hydrateFromSupabase();
                 saveSession({ type: 'master' });
                 location.hash = 'master';
             });
@@ -915,9 +964,17 @@
             document.getElementById('master-logout').addEventListener('click', () => { clearSession(); location.href = location.pathname; });
         }
 
+        async function bootstrapSupabase() {
+            const { data } = await supabase.auth.getSession();
+            if (data.session) {
+                if (!getSession()) saveSession({ type: 'master' });
+                await hydrateFromSupabase();
+            }
+            applyRoute();
+        }
         bindAuthForms();
         window.addEventListener('hashchange', applyRoute);
-        applyRoute();
+        bootstrapSupabase();
         // ================= FIM AUTENTICAÇÃO E MULTI-LOJA =================
 
         function taskStorageKey() { return scopedKey('siga-tarefas'); }
@@ -941,6 +998,7 @@
 
         function saveTasks(tasks) {
             localStorage.setItem(taskStorageKey(), JSON.stringify(tasks));
+            syncStoredList(taskStorageKey(), tasks);
         }
 
         function taskDateValue(task) {
@@ -1201,6 +1259,7 @@
 
         function saveSales(sales) {
             localStorage.setItem(salesStorageKey(), JSON.stringify(sales));
+            syncStoredList(salesStorageKey(), sales);
         }
 
         function salesInPeriod() {
@@ -1287,7 +1346,7 @@
             try { const saved = JSON.parse(localStorage.getItem(serviceStorageKey())); return Array.isArray(saved) ? saved : []; } catch (error) { return []; }
         }
 
-        function saveServices(services) { localStorage.setItem(serviceStorageKey(), JSON.stringify(services)); }
+        function saveServices(services) { localStorage.setItem(serviceStorageKey(), JSON.stringify(services)); syncStoredList(serviceStorageKey(), services); }
 
         function servicesInPeriod() {
             const savedServices = getServices();
@@ -1336,7 +1395,7 @@
             try { const saved = JSON.parse(localStorage.getItem(conditionalStorageKey())); return Array.isArray(saved) ? saved : []; } catch (error) { return []; }
         }
 
-        function saveConditionals(list) { localStorage.setItem(conditionalStorageKey(), JSON.stringify(list)); }
+        function saveConditionals(list) { localStorage.setItem(conditionalStorageKey(), JSON.stringify(list)); syncStoredList(conditionalStorageKey(), list); }
 
         function conditionalDeadline(conditional) {
             return new Date(new Date(conditional.createdAt).getTime() + 24 * 60 * 60 * 1000);
