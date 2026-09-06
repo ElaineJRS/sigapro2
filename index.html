@@ -787,9 +787,10 @@
                 renderManagerBar();
                 refreshAllAppViews();
             });
-            document.getElementById('manager-overview-button').addEventListener('click', () => showPage('manager-overview'));
+            document.getElementById('manager-overview-button').addEventListener('click', () => { location.hash = 'manager-overview'; });
             document.getElementById('manager-goals-button').addEventListener('click', () => { location.hash = 'manager-goals'; });
-            document.getElementById('goal-form').addEventListener('submit', event => {
+            const goalForm = document.getElementById('goal-form');
+            goalForm.addEventListener('submit', event => {
                 event.preventDefault();
                 const session = getSession();
                 const weekStart = document.getElementById('goal-week-start-input').value;
@@ -922,9 +923,10 @@
         function goalForCurrentUser() {
             const session = getSession();
             const userId = effectiveUserId();
-            const selectedMonth = new Date().toISOString().slice(0, 7);
+            const today = getLocalDateKey();
+            const selectedMonth = today.slice(0, 7);
             const goals = getGoals().filter(goal => goal.userId === userId && goal.lojaId === session?.lojaId);
-            return { weekly: goals.find(goal => getLocalDateKey() >= goal.weekStart && getLocalDateKey() <= goal.weekEnd) || goals[goals.length - 1], monthly: goals.find(goal => goal.month === selectedMonth) || goals[goals.length - 1] };
+            return { weekly: goals.find(goal => today >= goal.weekStart && today <= goal.weekEnd) || null, monthly: goals.find(goal => goal.month === selectedMonth) || null };
         }
 
         function daysBetween(start, end) {
@@ -933,16 +935,18 @@
 
         function currentGoalData() {
             const goal = goalForCurrentUser();
-            const weekly = goal.weekly || { bronze: 3500, silver: 10000, gold: 15000, diamond: 20000, weekStart: getLocalDateKey(), weekEnd: getLocalDateKey() };
-            const monthly = goal.monthly || weekly;
+            const today = getLocalDateKey();
+            const weekly = goal.weekly || { bronze: 0, silver: 0, gold: 0, diamond: 0, weekStart: today, weekEnd: today };
+            const monthly = goal.monthly || { month: today.slice(0, 7), monthly: 0 };
             const sales = getSales();
             const currentPeriod = window.activeGoalPeriod || 'semana';
-            let target = currentPeriod === 'dia' ? weekly.diamond / daysBetween(weekly.weekStart, weekly.weekEnd) : currentPeriod === 'mes' ? monthly.monthly : weekly.diamond;
-            const start = currentPeriod === 'dia' ? getLocalDateKey() : currentPeriod === 'mes' ? `${monthly.month}-01` : weekly.weekStart;
-            const end = currentPeriod === 'dia' ? start : currentPeriod === 'mes' ? `${monthly.month}-${new Date(Number(monthly.month.slice(0, 4)), Number(monthly.month.slice(5, 7)), 0).getDate()}` : weekly.weekEnd;
+            const weekDays = daysBetween(weekly.weekStart, weekly.weekEnd);
+            const start = currentPeriod === 'dia' ? today : currentPeriod === 'mes' ? `${monthly.month}-01` : weekly.weekStart;
+            const end = currentPeriod === 'dia' ? today : currentPeriod === 'mes' ? `${monthly.month}-${String(new Date(Number(monthly.month.slice(0, 4)), Number(monthly.month.slice(5, 7)), 0).getDate()).padStart(2, '0')}` : weekly.weekEnd;
+            const target = currentPeriod === 'dia' ? weekly.diamond / weekDays : currentPeriod === 'mes' ? monthly.monthly : weekly.diamond;
             const total = sales.filter(sale => sale.date >= start && sale.date <= end).reduce((sum, sale) => sum + Number(sale.value || 0), 0);
-            const divisor = currentPeriod === 'dia' ? daysBetween(weekly.weekStart, weekly.weekEnd) : currentPeriod === 'mes' ? 1 : 1;
-            return { goal: currentPeriod === 'mes' ? { bronze: monthly.monthly * 0.25, silver: monthly.monthly * 0.5, gold: monthly.monthly * 0.75, diamond: monthly.monthly } : currentPeriod === 'dia' ? { bronze: weekly.bronze / divisor, silver: weekly.silver / divisor, gold: weekly.gold / divisor, diamond: weekly.diamond / divisor } : weekly, target, total, start, end };
+            const goalValues = currentPeriod === 'mes' ? { bronze: monthly.monthly * 0.25, silver: monthly.monthly * 0.5, gold: monthly.monthly * 0.75, diamond: monthly.monthly } : currentPeriod === 'dia' ? { bronze: weekly.bronze / weekDays, silver: weekly.silver / weekDays, gold: weekly.gold / weekDays, diamond: weekly.diamond / weekDays } : weekly;
+            return { goal: goalValues, target, total, start, end };
         }
 
         function renderGoalMarkers(goal) {
