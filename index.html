@@ -525,7 +525,7 @@
         // ================= AUTENTICAÇÃO E MULTI-LOJA =================
         const SUPABASE_URL = 'https://kqnfjtubsdxaatzfdlvf.supabase.co';
         const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_DyoyiM0MvNNgsEmpsh7eWw_FqhfTshT';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+        const sigaSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
         const lojasStorageKey = 'siga-lojas';
         const usuariosStorageKey = 'siga-usuarios';
         const sessionStorageName = 'siga-sessao';
@@ -558,14 +558,14 @@
             const table = storageKey === lojasStorageKey ? 'lojas' : storageKey === usuariosStorageKey ? 'perfis' : databaseTableByStorageKey[baseKey];
             if (!table) return;
             const rows = list.map(item => table === 'lojas' ? { id: item.id, nome: item.name, slug: item.slug, criado_em: item.createdAt } : table === 'perfis' ? { id: item.id, loja_id: item.lojaId, nome: item.name, funcao: item.role, login: item.username, senha: item.password, slug: item.slug, link_slug: item.fullSlug, criado_em: item.createdAt } : databaseRowFromApp(table, item));
-            const { error } = await supabase.from(table).upsert(rows);
+            const { error } = await sigaSupabase.from(table).upsert(rows);
             if (error) console.warn(`Falha ao sincronizar ${table}:`, error.message);
         }
 
         async function hydrateFromSupabase() {
             const requests = [['lojas', lojasStorageKey], ['perfis', usuariosStorageKey], ...Object.entries(databaseTableByStorageKey).map(([key, table]) => [table, key])];
             await Promise.all(requests.map(async ([table, storageKey]) => {
-                const { data, error } = await supabase.from(table).select('*');
+                const { data, error } = await sigaSupabase.from(table).select('*');
                 if (error || !data) return;
                 const list = data.map(row => table === 'lojas' ? { ...row, name: row.nome ?? row.name, createdAt: row.criado_em ?? row.createdAt } : table === 'perfis' ? { ...row, lojaId: row.loja_id ?? row.lojaId, name: row.nome ?? row.name, role: row.funcao ?? row.role, username: row.login ?? row.username, password: row.senha ?? row.password, fullSlug: row.link_slug ?? row.fullSlug, createdAt: row.criado_em ?? row.createdAt } : databaseRowToApp(table, row));
                 localStorage.setItem(storageKey, JSON.stringify(list));
@@ -627,7 +627,7 @@
             try { return JSON.parse(localStorage.getItem(sessionStorageName)); } catch (error) { return null; }
         }
         function saveSession(session) { localStorage.setItem(sessionStorageName, JSON.stringify(session)); }
-        function clearSession() { localStorage.removeItem(sessionStorageName); supabase.auth.signOut(); }
+        function clearSession() { localStorage.removeItem(sessionStorageName); sigaSupabase.auth.signOut(); }
 
         function effectiveUserId() {
             const session = getSession();
@@ -845,7 +845,7 @@
                 const password = document.getElementById('master-password-input').value;
                 const errorLabel = document.getElementById('master-login-error');
                 errorLabel.textContent = '';
-                const { error } = await supabase.auth.signInWithPassword({ email, password });
+                const { error } = await sigaSupabase.auth.signInWithPassword({ email, password });
                 if (error) {
                     errorLabel.textContent = 'E-mail ou senha inválidos.';
                     return;
@@ -965,7 +965,7 @@
         }
 
         async function bootstrapSupabase() {
-            const { data } = await supabase.auth.getSession();
+            const { data } = await sigaSupabase.auth.getSession();
             if (data.session) {
                 if (!getSession()) saveSession({ type: 'master' });
                 await hydrateFromSupabase();
