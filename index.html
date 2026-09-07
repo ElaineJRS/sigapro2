@@ -493,21 +493,20 @@
     <section id="manager-goals-page" class="hidden max-w-5xl mx-auto p-4 space-y-6">
         <div class="flex items-center gap-3"><button type="button" data-back-dashboard aria-label="Voltar ao início" class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600"><i data-lucide="arrow-left" class="h-4 w-4"></i></button><div><h2 class="text-2xl font-black text-slate-800">Metas da equipe</h2><p class="mt-1 text-xs font-medium text-slate-500">Crie e edite as metas de cada vendedor.</p></div></div>
         <section id="goal-management-section" class="hidden rounded-[2rem] border border-amber-100 bg-white p-6 shadow-sm">
-            <div class="mb-4"><h3 class="text-lg font-black text-slate-800">Metas da equipe</h3><p class="mt-1 text-xs text-slate-500">Defina os níveis semanais, o período e a meta mensal.</p></div>
-            <form id="goal-form" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400 lg:col-span-2">Vendedor/gerente<select id="goal-user-input" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-amber-400"></select></label>
-                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Início da semana<input id="goal-week-start-input" type="date" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-700 outline-none"></label>
-                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Fim da semana<input id="goal-week-end-input" type="date" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-700 outline-none"></label>
-                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Bronze<input id="goal-bronze-input" type="number" min="0" step="0.01" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-700 outline-none"></label>
-                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Prata<input id="goal-silver-input" type="number" min="0" step="0.01" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-700 outline-none"></label>
-                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Ouro<input id="goal-gold-input" type="number" min="0" step="0.01" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-700 outline-none"></label>
-                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Diamante<input id="goal-diamond-input" type="number" min="0.01" step="0.01" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-700 outline-none"></label>
-                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Mês da meta<input id="goal-month-input" type="month" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-700 outline-none"></label>
-                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Bronze mensal<input id="goal-monthly-bronze-input" type="number" min="0" step="0.01" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-700 outline-none"></label>
-                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Prata mensal<input id="goal-monthly-silver-input" type="number" min="0" step="0.01" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-700 outline-none"></label>
-                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Ouro mensal<input id="goal-monthly-gold-input" type="number" min="0" step="0.01" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-700 outline-none"></label>
-                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Diamante mensal<input id="goal-monthly-diamond-input" type="number" min="0.01" step="0.01" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-700 outline-none"></label>
-                <div class="flex items-end justify-end lg:col-span-2"><button type="submit" class="rounded-xl bg-amber-500 px-5 py-2.5 text-xs font-black text-white hover:bg-amber-600">Salvar metas</button></div>
+            <div class="mb-4"><h3 class="text-lg font-black text-slate-800">Metas da equipe</h3><p class="mt-1 text-xs text-slate-500">Cadastre o total mensal, crie semanas e distribua cada semana entre os vendedores.</p></div>
+            <form id="monthly-goal-form" class="grid gap-3 sm:grid-cols-3">
+                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Mês<input id="monthly-goal-month" type="month" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold outline-none"></label>
+                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Meta mensal total<input id="monthly-goal-total" type="number" min="0.01" step="0.01" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold outline-none"></label>
+                <div class="flex items-end"><button type="submit" class="w-full rounded-xl bg-amber-500 px-5 py-2.5 text-xs font-black text-white hover:bg-amber-600">Salvar meta mensal</button></div>
+            </form>
+            <form id="weekly-goal-form" class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Meta mensal<select id="weekly-goal-month-select" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold outline-none"></select></label>
+                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Nome da semana<input id="weekly-goal-name" placeholder="Semana 1" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold outline-none"></label>
+                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Início<input id="weekly-goal-start" type="date" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold outline-none"></label>
+                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Fim<input id="weekly-goal-end" type="date" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold outline-none"></label>
+                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Valor da semana<input id="weekly-goal-total" type="number" min="0.01" step="0.01" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold outline-none"></label>
+                <div class="sm:col-span-2 lg:col-span-3"><p class="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Distribuição por vendedor <span id="weekly-goal-percent-total" class="text-indigo-600">0%</span></p><div id="weekly-goal-vendors" class="grid gap-2 sm:grid-cols-2"></div></div>
+                <div class="flex items-end"><button type="submit" class="w-full rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-black text-white hover:bg-indigo-700">Salvar semana</button></div>
             </form>
             <p id="goal-form-feedback" class="mt-3 min-h-4 text-center text-[10px] font-bold text-emerald-600"></p>
         </section>
@@ -564,6 +563,8 @@
             'siga-atendimentos': 'atendimentos',
             'siga-condicionais': 'condicionais',
             'siga-metas': 'metas',
+            'siga-metas-mensais': 'metas_mensais',
+            'siga-metas-semanais': 'metas_semanais',
             'siga-conteudos': 'conteudos'
         };
 
@@ -574,6 +575,8 @@
             if (table === 'condicionais') return { id: item.id, loja_id: getSession()?.lojaId || null, vendedor_id: item.userId || effectiveUserId(), cliente: item.client, telefone: item.phone, observacao: item.observation || '', produtos: item.products || [], prazo: item.dueDate || null, status: item.status || 'aberta', task_id: item.taskId || null, created_at: item.createdAt };
             if (table === 'metas') return { id: item.id, loja_id: item.lojaId, vendedor_id: item.userId, semana_inicio: item.weekStart, semana_fim: item.weekEnd, bronze: item.bronze, prata: item.silver, ouro: item.gold, diamante: item.diamond, mes_referencia: `${item.month}-01`, mensal_bronze: item.monthlyBronze, mensal_prata: item.monthlySilver, mensal_ouro: item.monthlyGold, mensal_diamante: item.monthlyDiamond, meta_mensal: item.monthlyDiamond };
             if (table === 'conteudos') return { id: item.id, tipo: item.type, texto: item.text, autor: item.author || '', ativo: item.active !== false };
+            if (table === 'metas_mensais') return { id: item.id, loja_id: item.lojaId, mes_referencia: `${item.month}-01`, valor_total: item.total };
+            if (table === 'metas_semanais') return { id: item.id, loja_id: item.lojaId, meta_mensal_id: item.monthlyGoalId, nome: item.name, semana_inicio: item.weekStart, semana_fim: item.weekEnd, valor_total: item.total, distribuicao: item.distributions || [] };
             return item;
         }
 
@@ -584,6 +587,8 @@
             if (table === 'condicionais') return { ...row, userId: row.vendedor_id ?? row.userId, client: row.cliente ?? row.client, phone: row.telefone ?? row.phone, observation: row.observacao ?? row.observation ?? '', products: row.produtos ?? row.products ?? [], dueDate: row.prazo ?? row.dueDate, status: row.status ?? 'aberta', taskId: row.task_id ?? row.taskId, createdAt: row.created_at ?? row.createdAt };
             if (table === 'metas') return { ...row, lojaId: row.loja_id, userId: row.vendedor_id, weekStart: row.semana_inicio, weekEnd: row.semana_fim, bronze: Number(row.bronze || 0), silver: Number(row.prata || 0), gold: Number(row.ouro || 0), diamond: Number(row.diamante || 0), month: String(row.mes_referencia || '').slice(0, 7), monthlyBronze: Number(row.mensal_bronze ?? 0), monthlySilver: Number(row.mensal_prata ?? 0), monthlyGold: Number(row.mensal_ouro ?? 0), monthlyDiamond: Number(row.mensal_diamante ?? row.meta_mensal ?? 0), monthly: Number(row.mensal_diamante ?? row.meta_mensal ?? 0) };
             if (table === 'conteudos') return { ...row, type: row.tipo, text: row.texto, author: row.autor || '', active: row.ativo !== false };
+            if (table === 'metas_mensais') return { ...row, lojaId: row.loja_id, month: String(row.mes_referencia || '').slice(0, 7), total: Number(row.valor_total || 0) };
+            if (table === 'metas_semanais') return { ...row, lojaId: row.loja_id, monthlyGoalId: row.meta_mensal_id, name: row.nome, weekStart: row.semana_inicio, weekEnd: row.semana_fim, total: Number(row.valor_total || 0), distributions: row.distribuicao || [] };
             return row;
         }
 
@@ -838,28 +843,36 @@
             });
             document.getElementById('manager-overview-button').addEventListener('click', () => { location.hash = 'manager-overview'; });
             document.getElementById('manager-goals-button').addEventListener('click', () => { location.hash = 'manager-goals'; });
-            const goalForm = document.getElementById('goal-form');
-            goalForm.addEventListener('submit', event => {
+            document.getElementById('monthly-goal-form').addEventListener('submit', event => {
                 event.preventDefault();
                 const session = getSession();
-                const weekStart = document.getElementById('goal-week-start-input').value;
-                const weekEnd = document.getElementById('goal-week-end-input').value;
-                const month = document.getElementById('goal-month-input').value;
-                if (weekEnd < weekStart) return;
-                const userId = document.getElementById('goal-user-input').value;
-                const existingGoal = getGoals().find(item => item.lojaId === session.lojaId && item.userId === userId && item.weekStart === weekStart && item.month === month);
-                const goal = { id: existingGoal?.id || crypto.randomUUID(), lojaId: session.lojaId, userId, weekStart, weekEnd, bronze: Number(document.getElementById('goal-bronze-input').value), silver: Number(document.getElementById('goal-silver-input').value), gold: Number(document.getElementById('goal-gold-input').value), diamond: Number(document.getElementById('goal-diamond-input').value), month, monthlyBronze: Number(document.getElementById('goal-monthly-bronze-input').value), monthlySilver: Number(document.getElementById('goal-monthly-silver-input').value), monthlyGold: Number(document.getElementById('goal-monthly-gold-input').value), monthlyDiamond: Number(document.getElementById('goal-monthly-diamond-input').value), monthly: Number(document.getElementById('goal-monthly-diamond-input').value) };
-                if (goal.bronze > goal.silver || goal.silver > goal.gold || goal.gold > goal.diamond || goal.monthlyBronze > goal.monthlySilver || goal.monthlySilver > goal.monthlyGold || goal.monthlyGold > goal.monthlyDiamond) {
-                    document.getElementById('goal-form-feedback').textContent = 'Cada nível deve ser maior ou igual ao anterior, com Diamante como maior meta.';
-                    return;
-                }
-                const goals = getGoals().filter(item => !(item.lojaId === goal.lojaId && item.userId === goal.userId && item.weekStart === weekStart && item.month === month));
-                saveGoals([...goals, goal]);
-                document.getElementById('goal-form-feedback').textContent = 'Metas salvas com sucesso.';
+                const month = document.getElementById('monthly-goal-month').value;
+                const total = Number(document.getElementById('monthly-goal-total').value);
+                const monthlyGoals = getMonthlyGoals();
+                const existing = monthlyGoals.find(item => item.lojaId === session.lojaId && item.month === month);
+                saveMonthlyGoals([...monthlyGoals.filter(item => item.id !== existing?.id), { id: existing?.id || crypto.randomUUID(), lojaId: session.lojaId, month, total }]);
                 renderGoalForm();
-                renderGoalCard();
             });
-            ['goal-user-input', 'goal-week-start-input', 'goal-month-input'].forEach(id => document.getElementById(id).addEventListener('change', renderGoalForm));
+            document.getElementById('weekly-goal-form').addEventListener('submit', event => {
+                event.preventDefault();
+                const session = getSession();
+                const start = document.getElementById('weekly-goal-start').value;
+                const end = document.getElementById('weekly-goal-end').value;
+                const monthId = document.getElementById('weekly-goal-month-select').value;
+                const total = Number(document.getElementById('weekly-goal-total').value);
+                const distributions = Array.from(document.querySelectorAll('[data-weekly-vendor]')).map(input => ({ userId: input.dataset.weeklyVendor, percentage: Number(input.value || 0), value: total * Number(input.value || 0) / 100 }));
+                const percentTotal = distributions.reduce((sum, item) => sum + item.percentage, 0);
+                if (end < start || Math.abs(percentTotal - 100) > 0.01) return document.getElementById('goal-form-feedback').textContent = 'A soma das porcentagens dos vendedores deve ser exatamente 100%.';
+                const monthlyGoal = getMonthlyGoals().find(item => item.id === monthId);
+                if (!monthlyGoal || total > monthlyGoal.total) return document.getElementById('goal-form-feedback').textContent = 'O valor semanal não pode ser maior que a meta mensal.';
+                const weeklyGoals = getWeeklyGoals();
+                const existing = weeklyGoals.find(item => item.id === document.getElementById('weekly-goal-form').dataset.editingId);
+                const otherWeeksTotal = weeklyGoals.filter(item => item.monthlyGoalId === monthId && item.id !== existing?.id).reduce((sum, item) => sum + Number(item.total || 0), 0);
+                if (otherWeeksTotal + total > monthlyGoal.total) return document.getElementById('goal-form-feedback').textContent = 'A soma das semanas não pode ultrapassar a meta mensal.';
+                saveWeeklyGoals([...weeklyGoals.filter(item => item.id !== existing?.id), { id: existing?.id || crypto.randomUUID(), lojaId: session.lojaId, monthlyGoalId: monthId, name: document.getElementById('weekly-goal-name').value.trim(), weekStart: start, weekEnd: end, total, distributions }]);
+                event.target.reset(); event.target.dataset.editingId = ''; renderGoalForm();
+            });
+            ['weekly-goal-month-select', 'weekly-goal-total'].forEach(id => document.getElementById(id).addEventListener('change', renderWeeklyVendors));
             document.getElementById('goal-markers').addEventListener('click', event => {
                 const marker = event.target.closest('[data-goal-tier]');
                 if (!marker) return;
@@ -869,30 +882,23 @@
                 document.getElementById('badge-nivel').textContent = labels[marker.dataset.goalTier];
             });
             document.getElementById('manager-goals-page').addEventListener('click', event => {
-                const editButton = event.target.closest('[data-edit-goal]');
-                if (editButton) {
-                    const goal = getGoals().find(item => item.id === editButton.dataset.editGoal);
+                const editWeekly = event.target.closest('[data-edit-weekly-goal]');
+                if (editWeekly) {
+                    const goal = getWeeklyGoals().find(item => item.id === editWeekly.dataset.editWeeklyGoal);
                     if (!goal) return;
-                    document.getElementById('goal-user-input').value = goal.userId;
-                    document.getElementById('goal-week-start-input').value = goal.weekStart;
-                    document.getElementById('goal-week-end-input').value = goal.weekEnd;
-                    document.getElementById('goal-bronze-input').value = goal.bronze;
-                    document.getElementById('goal-silver-input').value = goal.silver;
-                    document.getElementById('goal-gold-input').value = goal.gold;
-                    document.getElementById('goal-diamond-input').value = goal.diamond;
-                    document.getElementById('goal-month-input').value = goal.month;
-                    document.getElementById('goal-monthly-bronze-input').value = goal.monthlyBronze ?? 0;
-                    document.getElementById('goal-monthly-silver-input').value = goal.monthlySilver ?? 0;
-                    document.getElementById('goal-monthly-gold-input').value = goal.monthlyGold ?? 0;
-                    document.getElementById('goal-monthly-diamond-input').value = goal.monthlyDiamond ?? goal.monthly ?? 0;
-                    document.getElementById('goal-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    document.getElementById('weekly-goal-form').dataset.editingId = goal.id;
+                    document.getElementById('weekly-goal-month-select').value = goal.monthlyGoalId;
+                    document.getElementById('weekly-goal-name').value = goal.name;
+                    document.getElementById('weekly-goal-start').value = goal.weekStart;
+                    document.getElementById('weekly-goal-end').value = goal.weekEnd;
+                    document.getElementById('weekly-goal-total').value = goal.total;
+                    renderWeeklyVendors();
                     return;
                 }
-                const deleteButton = event.target.closest('[data-delete-goal]');
-                if (deleteButton && window.confirm('Excluir esta meta semanal e mensal?')) {
-                    saveGoals(getGoals().filter(item => item.id !== deleteButton.dataset.deleteGoal));
-                    renderGoalForm();
-                }
+                const deleteWeekly = event.target.closest('[data-delete-weekly-goal]');
+                if (deleteWeekly && window.confirm('Excluir esta semana?')) { saveWeeklyGoals(getWeeklyGoals().filter(item => item.id !== deleteWeekly.dataset.deleteWeeklyGoal)); renderGoalForm(); return; }
+                const deleteMonthly = event.target.closest('[data-delete-monthly-goal]');
+                if (deleteMonthly && window.confirm('Excluir esta meta mensal e suas semanas?')) { const monthlyId = deleteMonthly.dataset.deleteMonthlyGoal; saveMonthlyGoals(getMonthlyGoals().filter(item => item.id !== monthlyId)); saveWeeklyGoals(getWeeklyGoals().filter(item => item.monthlyGoalId !== monthlyId)); renderGoalForm(); return; }
             });
         }
 
@@ -953,15 +959,11 @@
             lucide.createIcons();
         }
 
-        function getGoals() {
-            try { const saved = JSON.parse(localStorage.getItem('siga-metas')); return Array.isArray(saved) ? saved : []; } catch (error) { return []; }
-        }
-
-        function saveGoals(goals) {
-            const previous = getGoals();
-            localStorage.setItem('siga-metas', JSON.stringify(goals));
-            syncStoredList('siga-metas', goals, previous.filter(item => !goals.some(next => next.id === item.id)).map(item => item.id));
-        }
+        function getMonthlyGoals() { try { const saved = JSON.parse(localStorage.getItem('siga-metas-mensais')); return Array.isArray(saved) ? saved : []; } catch (error) { return []; } }
+        function saveMonthlyGoals(list) { const previous = getMonthlyGoals(); localStorage.setItem('siga-metas-mensais', JSON.stringify(list)); syncStoredList('siga-metas-mensais', list, previous.filter(item => !list.some(next => next.id === item.id)).map(item => item.id)); }
+        function getWeeklyGoals() { try { const saved = JSON.parse(localStorage.getItem('siga-metas-semanais')); return Array.isArray(saved) ? saved : []; } catch (error) { return []; } }
+        function saveWeeklyGoals(list) { const previous = getWeeklyGoals(); localStorage.setItem('siga-metas-semanais', JSON.stringify(list)); syncStoredList('siga-metas-semanais', list, previous.filter(item => !list.some(next => next.id === item.id)).map(item => item.id)); }
+        function getGoals() { return getWeeklyGoals(); }
 
         function renderGoalForm() {
             const session = getSession();
@@ -971,57 +973,47 @@
                 return;
             }
             section.classList.remove('hidden');
-            const users = getUsuarios().filter(item => item.lojaId === session.lojaId && item.role === 'vendedor');
-            const select = document.getElementById('goal-user-input');
-            const selectedUserBeforeRender = select.value || session.viewingUserId || users[0]?.id || '';
-            select.innerHTML = users.map(user => `<option value="${user.id}">${escapeHtml(user.name)} · ${user.role}</option>`).join('');
-            if (users.some(user => user.id === selectedUserBeforeRender)) select.value = selectedUserBeforeRender;
             const today = getLocalDateKey();
             const month = today.slice(0, 7);
-            if (!document.getElementById('goal-week-start-input').value) {
+            const monthlyGoals = getMonthlyGoals().filter(item => item.lojaId === session.lojaId);
+            const monthSelect = document.getElementById('weekly-goal-month-select');
+            const selectedMonthGoal = monthSelect.value;
+            monthSelect.innerHTML = monthlyGoals.map(item => `<option value="${item.id}">${item.month} · ${money(item.total)}</option>`).join('');
+            if (monthlyGoals.some(item => item.id === selectedMonthGoal)) monthSelect.value = selectedMonthGoal;
+            if (!monthSelect.value && monthlyGoals.length) monthSelect.value = monthlyGoals[monthlyGoals.length - 1].id;
+            if (!document.getElementById('monthly-goal-month').value) {
+                document.getElementById('monthly-goal-month').value = month;
                 const date = new Date(`${today}T12:00:00`);
                 const day = date.getDay();
                 date.setDate(date.getDate() - (day === 0 ? 6 : day - 1));
-                document.getElementById('goal-week-start-input').value = getLocalDateKey(date);
+                document.getElementById('weekly-goal-start').value = getLocalDateKey(date);
                 date.setDate(date.getDate() + 6);
-                document.getElementById('goal-week-end-input').value = getLocalDateKey(date);
-                document.getElementById('goal-month-input').value = month;
+                document.getElementById('weekly-goal-end').value = getLocalDateKey(date);
             }
-            const selectedUser = document.getElementById('goal-user-input').value;
-            const selectedWeek = document.getElementById('goal-week-start-input').value;
-            const selectedMonth = document.getElementById('goal-month-input').value;
-            const existingGoal = getGoals().find(item => item.lojaId === session.lojaId && item.userId === selectedUser && item.weekStart === selectedWeek && item.month === selectedMonth);
-            if (existingGoal) {
-                document.getElementById('goal-week-end-input').value = existingGoal.weekEnd;
-                document.getElementById('goal-bronze-input').value = existingGoal.bronze;
-                document.getElementById('goal-silver-input').value = existingGoal.silver;
-                document.getElementById('goal-gold-input').value = existingGoal.gold;
-                document.getElementById('goal-diamond-input').value = existingGoal.diamond;
-                document.getElementById('goal-monthly-bronze-input').value = existingGoal.monthlyBronze ?? 0;
-                document.getElementById('goal-monthly-silver-input').value = existingGoal.monthlySilver ?? 0;
-                document.getElementById('goal-monthly-gold-input').value = existingGoal.monthlyGold ?? 0;
-                document.getElementById('goal-monthly-diamond-input').value = existingGoal.monthlyDiamond ?? existingGoal.monthly ?? 0;
-            } else {
-                document.getElementById('goal-week-end-input').value = selectedWeek;
-                ['goal-bronze-input', 'goal-silver-input', 'goal-gold-input', 'goal-diamond-input', 'goal-monthly-bronze-input', 'goal-monthly-silver-input', 'goal-monthly-gold-input', 'goal-monthly-diamond-input'].forEach(id => { document.getElementById(id).value = ''; });
-            }
+            document.getElementById('monthly-goal-total').value = getMonthlyGoals().find(item => item.lojaId === session.lojaId && item.month === document.getElementById('monthly-goal-month').value)?.total || '';
+            renderWeeklyVendors();
             renderGoalsLists(session.lojaId);
         }
 
+        function renderWeeklyVendors() {
+            const session = getSession();
+            const total = Number(document.getElementById('weekly-goal-total').value || 0);
+            const users = getUsuarios().filter(item => item.lojaId === session?.lojaId && item.role === 'vendedor');
+            const editing = getWeeklyGoals().find(item => item.id === document.getElementById('weekly-goal-form').dataset.editingId);
+            const saved = new Map((editing?.distributions || []).map(item => [item.userId, item.percentage]));
+            document.getElementById('weekly-goal-vendors').innerHTML = users.map(user => `<label class="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 p-2 text-[10px] font-bold text-slate-600"><span class="min-w-0 flex-1 truncate">${escapeHtml(user.name)}</span><input type="number" min="0" max="100" step="0.01" data-weekly-vendor="${user.id}" value="${saved.get(user.id) || ''}" class="w-20 rounded-lg border border-slate-200 px-2 py-1 text-right outline-none"><span>%</span><output class="w-24 text-right text-indigo-600">${money(total * Number(saved.get(user.id) || 0) / 100)}</output></label>`).join('');
+            document.getElementById('weekly-goal-percent-total').textContent = `${Array.from(document.querySelectorAll('[data-weekly-vendor]')).reduce((sum, input) => sum + Number(input.value || 0), 0).toFixed(2)}%`;
+            document.querySelectorAll('[data-weekly-vendor]').forEach(input => input.addEventListener('input', () => { input.nextElementSibling.nextElementSibling.value = money(total * Number(input.value || 0) / 100); document.getElementById('weekly-goal-percent-total').textContent = `${Array.from(document.querySelectorAll('[data-weekly-vendor]')).reduce((sum, item) => sum + Number(item.value || 0), 0).toFixed(2)}%`; }));
+        }
+
         function renderGoalsLists(lojaId) {
-            const goals = getGoals().filter(goal => goal.lojaId === lojaId);
+            const monthlyGoals = getMonthlyGoals().filter(goal => goal.lojaId === lojaId);
+            const weeklyGoals = getWeeklyGoals().filter(goal => goal.lojaId === lojaId);
             const users = getUsuarios();
             const weeklyList = document.getElementById('weekly-goals-list');
             const monthlyList = document.getElementById('monthly-goals-list');
-            weeklyList.innerHTML = goals.length ? goals.map(goal => {
-                const user = users.find(item => item.id === goal.userId);
-                return `<article class="rounded-xl border border-slate-100 bg-slate-50 p-3"><div class="flex items-start justify-between gap-2"><div><p class="text-xs font-black text-slate-700">${escapeHtml(user?.name || 'Vendedor')}</p><p class="mt-1 text-[10px] font-semibold text-slate-500">${goal.weekStart} até ${goal.weekEnd}</p><p class="mt-1 text-[10px] text-slate-400">B ${money(goal.bronze)} · P ${money(goal.silver)} · O ${money(goal.gold)} · D ${money(goal.diamond)}</p></div><div class="flex gap-1"><button type="button" data-edit-goal="${goal.id}" aria-label="Editar meta" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-white hover:text-indigo-600"><i data-lucide="pencil" class="h-4 w-4"></i></button><button type="button" data-delete-goal="${goal.id}" aria-label="Excluir meta" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-white hover:text-red-600"><i data-lucide="trash-2" class="h-4 w-4"></i></button></div></div></article>`;
-            }).join('') : '<p class="text-xs text-slate-400">Nenhuma meta semanal criada.</p>';
-            const monthlyGoals = goals.filter((goal, index, list) => list.findIndex(item => item.userId === goal.userId && item.month === goal.month) === index);
-            monthlyList.innerHTML = monthlyGoals.length ? monthlyGoals.map(goal => {
-                const user = users.find(item => item.id === goal.userId);
-                return `<article class="rounded-xl border border-slate-100 bg-slate-50 p-3"><div class="flex items-start justify-between gap-2"><div><p class="text-xs font-black text-slate-700">${escapeHtml(user?.name || 'Vendedor')}</p><p class="mt-1 text-[10px] font-semibold text-slate-500">${goal.month}</p><p class="mt-1 text-[10px] text-slate-400">B ${money(goal.monthlyBronze)} · P ${money(goal.monthlySilver)} · O ${money(goal.monthlyGold)} · D ${money(goal.monthlyDiamond ?? goal.monthly)}</p></div><div class="flex gap-1"><button type="button" data-edit-goal="${goal.id}" aria-label="Editar meta mensal" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-white hover:text-indigo-600"><i data-lucide="pencil" class="h-4 w-4"></i></button><button type="button" data-delete-goal="${goal.id}" aria-label="Excluir meta mensal" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-white hover:text-red-600"><i data-lucide="trash-2" class="h-4 w-4"></i></button></div></div></article>`;
-            }).join('') : '<p class="text-xs text-slate-400">Nenhuma meta mensal criada.</p>';
+            weeklyList.innerHTML = weeklyGoals.length ? weeklyGoals.map(goal => `<article class="rounded-xl border border-slate-100 bg-slate-50 p-3"><div class="flex items-start justify-between gap-2"><div><p class="text-xs font-black text-slate-700">${escapeHtml(goal.name)}</p><p class="mt-1 text-[10px] font-semibold text-slate-500">${goal.weekStart} até ${goal.weekEnd} · ${money(goal.total)}</p><p class="mt-1 text-[10px] text-slate-400">${goal.distributions.map(item => `${escapeHtml(users.find(user => user.id === item.userId)?.name || 'Vendedor')}: ${item.percentage}% (${money(item.value)})`).join(' · ')}</p></div><div class="flex gap-1"><button type="button" data-edit-weekly-goal="${goal.id}" aria-label="Editar semana" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:text-indigo-600"><i data-lucide="pencil" class="h-4 w-4"></i></button><button type="button" data-delete-weekly-goal="${goal.id}" aria-label="Excluir semana" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:text-red-600"><i data-lucide="trash-2" class="h-4 w-4"></i></button></div></div></article>`).join('') : '<p class="text-xs text-slate-400">Nenhuma semana criada.</p>';
+            monthlyList.innerHTML = monthlyGoals.length ? monthlyGoals.map(goal => `<article class="rounded-xl border border-slate-100 bg-slate-50 p-3"><div class="flex items-center justify-between gap-2"><div><p class="text-xs font-black text-slate-700">${goal.month}</p><p class="mt-1 text-[10px] font-black text-indigo-600">${money(goal.total)}</p></div><button type="button" data-delete-monthly-goal="${goal.id}" aria-label="Excluir meta mensal" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:text-red-600"><i data-lucide="trash-2" class="h-4 w-4"></i></button></div></article>`).join('') : '<p class="text-xs text-slate-400">Nenhuma meta mensal criada.</p>';
             lucide.createIcons();
         }
 
@@ -1030,11 +1022,9 @@
             const userId = effectiveUserId();
             const today = getLocalDateKey();
             const selectedMonth = today.slice(0, 7);
-            const goals = getGoals().filter(goal => goal.userId === userId && goal.lojaId === session?.lojaId);
-            const weeklyGoals = goals.filter(goal => goal.weekStart && goal.weekEnd).sort((first, second) => first.weekStart.localeCompare(second.weekStart));
+            const weeklyGoals = getWeeklyGoals().filter(goal => goal.distributions?.some(item => item.userId === userId) && goal.lojaId === session?.lojaId).sort((first, second) => first.weekStart.localeCompare(second.weekStart));
             const activeWeekly = weeklyGoals.find(goal => today >= goal.weekStart && today <= goal.weekEnd);
-            const latestWeekly = weeklyGoals.filter(goal => goal.weekStart <= today).at(-1) || weeklyGoals[0] || null;
-            return { weekly: activeWeekly || latestWeekly, monthly: goals.find(goal => goal.month === selectedMonth) || null };
+            return { weekly: activeWeekly || weeklyGoals.filter(goal => goal.weekStart <= today).at(-1) || weeklyGoals[0] || null, monthly: getMonthlyGoals().find(goal => goal.lojaId === session?.lojaId && goal.month === selectedMonth) || null };
         }
 
         function daysBetween(start, end) {
@@ -1044,16 +1034,17 @@
         function currentGoalData() {
             const goal = goalForCurrentUser();
             const today = getLocalDateKey();
-            const weekly = goal.weekly || { bronze: 0, silver: 0, gold: 0, diamond: 0, weekStart: today, weekEnd: today };
-            const monthly = goal.monthly || { month: today.slice(0, 7), monthlyBronze: 0, monthlySilver: 0, monthlyGold: 0, monthlyDiamond: 0 };
+            const weekly = goal.weekly || { total: 0, weekStart: today, weekEnd: today, distributions: [] };
+            const monthly = goal.monthly || { month: today.slice(0, 7), total: 0 };
+            const userDistribution = weekly.distributions.find(item => item.userId === effectiveUserId()) || { value: 0, percentage: 0 };
             const sales = getSales();
             const currentPeriod = window.activeGoalPeriod || 'semana';
             const weekDays = daysBetween(weekly.weekStart, weekly.weekEnd);
             const start = currentPeriod === 'dia' ? today : currentPeriod === 'mes' ? `${monthly.month}-01` : weekly.weekStart;
             const end = currentPeriod === 'dia' ? today : currentPeriod === 'mes' ? `${monthly.month}-${String(new Date(Number(monthly.month.slice(0, 4)), Number(monthly.month.slice(5, 7)), 0).getDate()).padStart(2, '0')}` : weekly.weekEnd;
-            const target = currentPeriod === 'dia' ? weekly.diamond / weekDays : currentPeriod === 'mes' ? monthly.monthlyDiamond : weekly.diamond;
+            const target = currentPeriod === 'dia' ? Number(userDistribution.value) / weekDays : currentPeriod === 'mes' ? monthly.total : Number(userDistribution.value);
             const total = sales.filter(sale => sale.date >= start && sale.date <= end).reduce((sum, sale) => sum + Number(sale.value || 0), 0);
-            const goalValues = currentPeriod === 'mes' ? { bronze: monthly.monthlyBronze, silver: monthly.monthlySilver, gold: monthly.monthlyGold, diamond: monthly.monthlyDiamond } : currentPeriod === 'dia' ? { bronze: weekly.bronze / weekDays, silver: weekly.silver / weekDays, gold: weekly.gold / weekDays, diamond: weekly.diamond / weekDays } : { bronze: weekly.bronze, silver: weekly.silver, gold: weekly.gold, diamond: weekly.diamond };
+            const goalValues = currentPeriod === 'mes' ? { bronze: monthly.total * 0.25, silver: monthly.total * 0.5, gold: monthly.total * 0.75, diamond: monthly.total } : { bronze: Number(userDistribution.value) * 0.25, silver: Number(userDistribution.value) * 0.5, gold: Number(userDistribution.value) * 0.75, diamond: Number(userDistribution.value) };
             return { goal: goalValues, target, total, start, end };
         }
 
@@ -1528,10 +1519,10 @@
             const date = new Date(`${today}T12:00:00`);
             const day = date.getDay();
             date.setDate(date.getDate() - (day === 0 ? 6 : day - 1));
-            document.getElementById('goal-week-start-input').value = getLocalDateKey(date);
+            document.getElementById('monthly-goal-month').value = today.slice(0, 7);
+            document.getElementById('weekly-goal-start').value = getLocalDateKey(date);
             date.setDate(date.getDate() + 6);
-            document.getElementById('goal-week-end-input').value = getLocalDateKey(date);
-            document.getElementById('goal-month-input').value = today.slice(0, 7);
+            document.getElementById('weekly-goal-end').value = getLocalDateKey(date);
         }
 
         function renderDateCarousel() {

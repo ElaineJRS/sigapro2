@@ -135,6 +135,31 @@ create table if not exists public.conteudos (
   unique (tipo, texto)
 );
 
+create table if not exists public.metas_mensais (
+  id uuid primary key default gen_random_uuid(),
+  loja_id uuid not null references public.lojas(id) on delete cascade,
+  mes_referencia date not null,
+  valor_total numeric(12,2) not null check (valor_total > 0),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (loja_id, mes_referencia)
+);
+
+create table if not exists public.metas_semanais (
+  id uuid primary key default gen_random_uuid(),
+  loja_id uuid not null references public.lojas(id) on delete cascade,
+  meta_mensal_id uuid not null references public.metas_mensais(id) on delete cascade,
+  nome text not null,
+  semana_inicio date not null,
+  semana_fim date not null,
+  valor_total numeric(12,2) not null check (valor_total > 0),
+  distribuicao jsonb not null default '[]'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  check (semana_fim >= semana_inicio),
+  unique (meta_mensal_id, nome)
+);
+
 insert into public.conteudos (tipo, texto, autor) values
 ('frase', 'Grandes batalhas só são dadas a grandes guerreiros.', 'Autor desconhecido'),
 ('frase', 'O sucesso é a soma de pequenos esforços repetidos todos os dias.', 'Robert Collier'),
@@ -165,6 +190,8 @@ create index if not exists atendimentos_vendedor_data_idx on public.atendimentos
 create index if not exists condicionais_vendedor_status_idx on public.condicionais(vendedor_id, status);
 create index if not exists metas_vendedor_periodo_idx on public.metas(vendedor_id, semana_inicio, semana_fim, mes_referencia);
 create index if not exists conteudos_tipo_ativo_idx on public.conteudos(tipo, ativo);
+create index if not exists metas_mensais_loja_mes_idx on public.metas_mensais(loja_id, mes_referencia);
+create index if not exists metas_semanais_periodo_idx on public.metas_semanais(meta_mensal_id, semana_inicio, semana_fim);
 
 create or replace function public.set_updated_at()
 returns trigger language plpgsql as $$
@@ -190,6 +217,10 @@ drop trigger if exists metas_set_updated_at on public.metas;
 create trigger metas_set_updated_at before update on public.metas for each row execute function public.set_updated_at();
 drop trigger if exists conteudos_set_updated_at on public.conteudos;
 create trigger conteudos_set_updated_at before update on public.conteudos for each row execute function public.set_updated_at();
+drop trigger if exists metas_mensais_set_updated_at on public.metas_mensais;
+create trigger metas_mensais_set_updated_at before update on public.metas_mensais for each row execute function public.set_updated_at();
+drop trigger if exists metas_semanais_set_updated_at on public.metas_semanais;
+create trigger metas_semanais_set_updated_at before update on public.metas_semanais for each row execute function public.set_updated_at();
 
 alter table public.lojas enable row level security;
 alter table public.perfis enable row level security;
@@ -199,12 +230,14 @@ alter table public.condicionais enable row level security;
 alter table public.atendimentos enable row level security;
 alter table public.metas enable row level security;
 alter table public.conteudos enable row level security;
+alter table public.metas_mensais enable row level security;
+alter table public.metas_semanais enable row level security;
 
 -- O site usa login próprio para vendedores/gerentes, não supabase.auth.
 -- Estas policies permitem o funcionamento do cliente com a publishable key.
 -- Para produção, migre os acessos de equipe para Supabase Auth e restrinja por auth.uid().
 do $$ declare table_name text; begin
-  foreach table_name in array array['lojas','perfis','tarefas','vendas','condicionais','atendimentos','metas','conteudos'] loop
+  foreach table_name in array array['lojas','perfis','tarefas','vendas','condicionais','atendimentos','metas','conteudos','metas_mensais','metas_semanais'] loop
     execute format('drop policy if exists siga_public_select on public.%I', table_name);
     execute format('drop policy if exists siga_public_insert on public.%I', table_name);
     execute format('drop policy if exists siga_public_update on public.%I', table_name);
