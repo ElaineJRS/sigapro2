@@ -82,6 +82,18 @@
                 <div id="loja-list" class="space-y-2"></div>
             </section>
 
+            <section class="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
+                <div class="mb-4"><h2 class="text-lg font-black text-slate-800">Frases e dicas</h2><p class="mt-1 text-xs text-slate-400">O sistema escolhe uma frase e uma dica por dia para cada usuário.</p></div>
+                <form id="content-form" class="grid gap-3 sm:grid-cols-2">
+                    <input type="hidden" id="content-editing-id">
+                    <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Tipo<select id="content-type-input" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold outline-none"><option value="frase">Frase</option><option value="dica">Dica de venda</option></select></label>
+                    <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Autor (opcional)<input id="content-author-input" maxlength="120" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none"></label>
+                    <label class="text-[10px] font-black uppercase tracking-wider text-slate-400 sm:col-span-2">Texto<textarea id="content-text-input" required maxlength="500" rows="3" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium outline-none"></textarea></label>
+                    <div class="flex justify-end gap-2 sm:col-span-2"><button type="button" id="cancel-content-edit" class="hidden rounded-xl px-4 py-2.5 text-xs font-bold text-slate-500">Cancelar</button><button type="submit" class="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-black text-white">Salvar conteúdo</button></div>
+                </form>
+                <div class="mt-6 grid gap-4 md:grid-cols-2"><div><h3 class="mb-2 text-xs font-black uppercase tracking-wider text-slate-500">Frases</h3><div id="phrase-list" class="space-y-2"></div></div><div><h3 class="mb-2 text-xs font-black uppercase tracking-wider text-slate-500">Dicas de venda</h3><div id="tip-list" class="space-y-2"></div></div></div>
+            </section>
+
             <section id="loja-team-section" class="hidden rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
                 <div class="mb-4 flex items-center justify-between"><h2 id="loja-team-title" class="text-lg font-black text-slate-800">Equipe da loja</h2><button type="button" id="close-loja-team" class="text-[10px] font-black uppercase text-slate-400">Fechar</button></div>
                 <form id="usuario-form" class="mb-4 grid gap-3 sm:grid-cols-2">
@@ -139,9 +151,9 @@
         <!-- FRASE DO DIA -->
         <section class="py-4 text-center">
             <p class="text-lg md:text-xl font-semibold text-slate-700 italic leading-relaxed">
-                "Grandes batalhas só são dadas a grandes guerreiros."
+                <span id="daily-phrase-text">"Grandes batalhas só são dadas a grandes guerreiros."</span>
             </p>
-            <p class="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] mt-2">— Autor Desconhecido</p>
+            <p id="daily-phrase-author" class="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] mt-2">— Autor Desconhecido</p>
         </section>
 
         <!-- SELETOR DE PERÍODO -->
@@ -207,9 +219,7 @@
             <section class="bg-indigo-600 p-6 rounded-[2rem] text-white relative overflow-hidden shadow-lg shadow-indigo-100">
                 <i data-lucide="lightbulb" class="absolute -right-2 -bottom-2 w-20 h-20 opacity-20 rotate-12"></i>
                 <h3 class="text-[10px] font-black uppercase tracking-[0.2em] mb-2 opacity-80">Dica de Venda (Microlearning)</h3>
-                <p class="text-sm font-semibold leading-relaxed">
-                    "Técnica da Escassez: Informe ao cliente que as condições de bônus são exclusivas para atendimentos de hoje."
-                </p>
+                <p id="daily-sales-tip" class="text-sm font-semibold leading-relaxed">"Técnica da Escassez: Informe ao cliente que as condições de bônus são exclusivas para atendimentos de hoje."</p>
             </section>
         </div>
 
@@ -553,7 +563,8 @@
             'siga-vendas': 'vendas',
             'siga-atendimentos': 'atendimentos',
             'siga-condicionais': 'condicionais',
-            'siga-metas': 'metas'
+            'siga-metas': 'metas',
+            'siga-conteudos': 'conteudos'
         };
 
         function databaseRowFromApp(table, item) {
@@ -562,6 +573,7 @@
             if (table === 'atendimentos') return { id: item.id, loja_id: getSession()?.lojaId || null, vendedor_id: item.userId || effectiveUserId(), cliente: item.client || '', resultado: item.outcome, resultado_label: item.outcomeLabel || '', valor: item.value || 0, telefone: item.phone || '', observacao: item.notes || '', produtos: item.products || [], produtos_apresentados: item.shownProducts || [], demanda: item.demand || '', venda_id: item.saleId || null, condicional_id: item.conditionalId || null, data_hora: item.datetime || item.dateTime };
             if (table === 'condicionais') return { id: item.id, loja_id: getSession()?.lojaId || null, vendedor_id: item.userId || effectiveUserId(), cliente: item.client, telefone: item.phone, observacao: item.observation || '', produtos: item.products || [], prazo: item.dueDate || null, status: item.status || 'aberta', task_id: item.taskId || null, created_at: item.createdAt };
             if (table === 'metas') return { id: item.id, loja_id: item.lojaId, vendedor_id: item.userId, semana_inicio: item.weekStart, semana_fim: item.weekEnd, bronze: item.bronze, prata: item.silver, ouro: item.gold, diamante: item.diamond, mes_referencia: `${item.month}-01`, mensal_bronze: item.monthlyBronze, mensal_prata: item.monthlySilver, mensal_ouro: item.monthlyGold, mensal_diamante: item.monthlyDiamond, meta_mensal: item.monthlyDiamond };
+            if (table === 'conteudos') return { id: item.id, tipo: item.type, texto: item.text, autor: item.author || '', ativo: item.active !== false };
             return item;
         }
 
@@ -571,6 +583,7 @@
             if (table === 'atendimentos') return { ...row, userId: row.vendedor_id ?? row.userId, client: row.cliente ?? row.client ?? '', outcome: row.resultado ?? row.outcome, outcomeLabel: row.resultado_label ?? row.outcomeLabel, value: row.valor ?? row.value ?? 0, phone: row.telefone ?? row.phone ?? '', notes: row.observacao ?? row.notes ?? '', products: row.produtos ?? row.products ?? [], shownProducts: row.produtos_apresentados ?? row.shownProducts ?? [], demand: row.demanda ?? row.demand ?? '', saleId: row.venda_id ?? row.saleId, conditionalId: row.condicional_id ?? row.conditionalId, datetime: row.data_hora ?? row.datetime };
             if (table === 'condicionais') return { ...row, userId: row.vendedor_id ?? row.userId, client: row.cliente ?? row.client, phone: row.telefone ?? row.phone, observation: row.observacao ?? row.observation ?? '', products: row.produtos ?? row.products ?? [], dueDate: row.prazo ?? row.dueDate, status: row.status ?? 'aberta', taskId: row.task_id ?? row.taskId, createdAt: row.created_at ?? row.createdAt };
             if (table === 'metas') return { ...row, lojaId: row.loja_id, userId: row.vendedor_id, weekStart: row.semana_inicio, weekEnd: row.semana_fim, bronze: Number(row.bronze || 0), silver: Number(row.prata || 0), gold: Number(row.ouro || 0), diamond: Number(row.diamante || 0), month: String(row.mes_referencia || '').slice(0, 7), monthlyBronze: Number(row.mensal_bronze ?? 0), monthlySilver: Number(row.mensal_prata ?? 0), monthlyGold: Number(row.mensal_ouro ?? 0), monthlyDiamond: Number(row.mensal_diamante ?? row.meta_mensal ?? 0), monthly: Number(row.mensal_diamante ?? row.meta_mensal ?? 0) };
+            if (table === 'conteudos') return { ...row, type: row.tipo, text: row.texto, author: row.autor || '', active: row.ativo !== false };
             return row;
         }
 
@@ -622,6 +635,24 @@
             try { const saved = JSON.parse(localStorage.getItem(usuariosStorageKey)); return Array.isArray(saved) ? saved : []; } catch (error) { return []; }
         }
         function saveUsuarios(list) { const previous = getUsuarios(); localStorage.setItem(usuariosStorageKey, JSON.stringify(list)); syncStoredList(usuariosStorageKey, list, previous.filter(item => !list.some(next => next.id === item.id)).map(item => item.id)); }
+
+        function getContents() { try { const saved = JSON.parse(localStorage.getItem('siga-conteudos')); return Array.isArray(saved) ? saved : []; } catch (error) { return []; } }
+        function saveContents(list) { const previous = getContents(); localStorage.setItem('siga-conteudos', JSON.stringify(list)); syncStoredList('siga-conteudos', list, previous.filter(item => !list.some(next => next.id === item.id)).map(item => item.id)); }
+
+        function dailyContent(type) {
+            const contents = getContents().filter(item => item.type === type && item.active !== false);
+            if (!contents.length) return null;
+            const userKey = getSession()?.userId || getSession()?.type || 'visitor';
+            const seed = Array.from(`${type}:${userKey}:${getLocalDateKey()}`).reduce((total, character) => ((total * 31) + character.charCodeAt(0)) >>> 0, 7);
+            return contents[seed % contents.length];
+        }
+
+        function renderDailyContent() {
+            const phrase = dailyContent('frase');
+            const tip = dailyContent('dica');
+            if (phrase) { document.getElementById('daily-phrase-text').textContent = `"${phrase.text}"`; document.getElementById('daily-phrase-author').textContent = phrase.author ? `— ${phrase.author}` : ''; }
+            if (tip) document.getElementById('daily-sales-tip').textContent = `"${tip.text}"`;
+        }
 
         function accessLinkFor(usuario) {
             return `${location.origin}${location.pathname}#acesso/${usuario.fullSlug}`;
@@ -761,6 +792,7 @@
             initMoodCard();
             bindManagerBar();
             renderGoalCard();
+            renderDailyContent();
             document.getElementById('app-logout').addEventListener('click', () => { clearSession(); location.href = location.pathname; });
         }
 
@@ -769,6 +801,7 @@
             renderDashboardSales();
             refreshMoodCard();
             renderGoalCard();
+            renderDailyContent();
         }
 
         function currentTaskOwnerRole() {
@@ -1061,6 +1094,17 @@
             }).join('') : '<p class="text-xs text-slate-400">Nenhuma loja cadastrada ainda.</p>';
             lucide.createIcons();
             if (selectedLojaId) renderLojaTeam(selectedLojaId);
+            renderContentLists();
+        }
+
+        function renderContentLists() {
+            const contents = getContents();
+            ['frase', 'dica'].forEach(type => {
+                const target = document.getElementById(type === 'frase' ? 'phrase-list' : 'tip-list');
+                const items = contents.filter(item => item.type === type);
+                target.innerHTML = items.length ? items.map(item => `<article class="rounded-xl border border-slate-100 bg-slate-50 p-3"><div class="flex items-start justify-between gap-2"><div class="min-w-0"><p class="text-xs font-bold text-slate-700">${escapeHtml(item.text)}</p><p class="mt-1 text-[10px] text-slate-400">${escapeHtml(item.author || 'Sem autor')}</p></div><div class="flex shrink-0 gap-1"><button type="button" data-edit-content="${item.id}" aria-label="Editar conteúdo" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-white hover:text-indigo-600"><i data-lucide="pencil" class="h-4 w-4"></i></button><button type="button" data-delete-content="${item.id}" aria-label="Excluir conteúdo" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-white hover:text-red-600"><i data-lucide="trash-2" class="h-4 w-4"></i></button></div></div></article>`).join('') : '<p class="text-xs text-slate-400">Nenhum conteúdo cadastrado.</p>';
+            });
+            lucide.createIcons();
         }
 
         function renderLojaTeam(lojaId) {
@@ -1220,6 +1264,22 @@
             });
 
             document.getElementById('master-logout').addEventListener('click', () => { clearSession(); location.href = location.pathname; });
+            document.getElementById('content-form').addEventListener('submit', event => {
+                event.preventDefault();
+                const id = document.getElementById('content-editing-id').value;
+                const content = { id: id || crypto.randomUUID(), type: document.getElementById('content-type-input').value, text: document.getElementById('content-text-input').value.trim(), author: document.getElementById('content-author-input').value.trim(), active: true };
+                if (!content.text) return;
+                const contents = getContents();
+                saveContents(id ? contents.map(item => item.id === id ? content : item) : [...contents, content]);
+                event.target.reset(); document.getElementById('content-editing-id').value = ''; document.getElementById('cancel-content-edit').classList.add('hidden'); renderContentLists();
+            });
+            document.getElementById('cancel-content-edit').addEventListener('click', () => { document.getElementById('content-form').reset(); document.getElementById('content-editing-id').value = ''; document.getElementById('cancel-content-edit').classList.add('hidden'); });
+            document.getElementById('view-master-panel').addEventListener('click', event => {
+                const edit = event.target.closest('[data-edit-content]');
+                if (edit) { const item = getContents().find(content => content.id === edit.dataset.editContent); if (!item) return; document.getElementById('content-editing-id').value = item.id; document.getElementById('content-type-input').value = item.type; document.getElementById('content-text-input').value = item.text; document.getElementById('content-author-input').value = item.author || ''; document.getElementById('cancel-content-edit').classList.remove('hidden'); return; }
+                const remove = event.target.closest('[data-delete-content]');
+                if (remove && window.confirm('Excluir este conteúdo?')) { saveContents(getContents().filter(item => item.id !== remove.dataset.deleteContent)); renderContentLists(); }
+            });
         }
 
         async function bootstrapSupabase() {

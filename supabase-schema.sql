@@ -124,12 +124,47 @@ alter table public.metas add column if not exists mensal_ouro numeric(12,2) not 
 alter table public.metas add column if not exists mensal_diamante numeric(12,2) not null default 0;
 update public.metas set mensal_diamante = meta_mensal where mensal_diamante = 0 and meta_mensal > 0;
 
+create table if not exists public.conteudos (
+  id uuid primary key default gen_random_uuid(),
+  tipo text not null check (tipo in ('frase', 'dica')),
+  texto text not null,
+  autor text not null default '',
+  ativo boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (tipo, texto)
+);
+
+insert into public.conteudos (tipo, texto, autor) values
+('frase', 'Grandes batalhas só são dadas a grandes guerreiros.', 'Autor desconhecido'),
+('frase', 'O sucesso é a soma de pequenos esforços repetidos todos os dias.', 'Robert Collier'),
+('frase', 'A excelência não é um ato, mas um hábito.', 'Aristóteles'),
+('frase', 'Comece onde você está. Use o que você tem. Faça o que você pode.', 'Arthur Ashe'),
+('frase', 'Acredite que você pode, assim você já está no meio do caminho.', 'Theodore Roosevelt'),
+('frase', 'O sucesso acontece quando a preparação encontra a oportunidade.', 'Seneca'),
+('frase', 'Não espere por oportunidades extraordinárias. Agarre as ocasiões comuns.', 'Orison Swett Marden'),
+('frase', 'A persistência realiza o impossível.', 'Provérbio'),
+('frase', 'Cada atendimento é uma nova oportunidade de criar valor.', 'SIGA'),
+('frase', 'Grandes resultados começam com uma decisão simples: continuar.', 'SIGA'),
+('dica', 'Faça perguntas abertas para entender o que o cliente realmente procura.'),
+('dica', 'Apresente primeiro o benefício do produto e depois explique suas características.'),
+('dica', 'Confirme o que o cliente valorizou antes de falar sobre preço.'),
+('dica', 'Ofereça duas opções adequadas para facilitar a decisão.'),
+('dica', 'Use o nome do cliente durante o atendimento para criar proximidade.'),
+('dica', 'Ao ouvir uma objeção, agradeça e investigue antes de responder.'),
+('dica', 'Mostre produtos complementares que resolvam uma necessidade relacionada.'),
+('dica', 'Finalize com um próximo passo claro: experimentar, reservar ou concluir.'),
+('dica', 'Registre atendimentos não convertidos para identificar oportunidades de melhoria.'),
+('dica', 'Faça follow-up no prazo combinado e cumpra exatamente o que prometeu.')
+on conflict (tipo, texto) do nothing;
+
 create index if not exists perfis_loja_id_idx on public.perfis(loja_id);
 create index if not exists tarefas_responsavel_data_idx on public.tarefas(responsavel_id, data);
 create index if not exists vendas_vendedor_data_idx on public.vendas(vendedor_id, data_hora);
 create index if not exists atendimentos_vendedor_data_idx on public.atendimentos(vendedor_id, data_hora);
 create index if not exists condicionais_vendedor_status_idx on public.condicionais(vendedor_id, status);
 create index if not exists metas_vendedor_periodo_idx on public.metas(vendedor_id, semana_inicio, semana_fim, mes_referencia);
+create index if not exists conteudos_tipo_ativo_idx on public.conteudos(tipo, ativo);
 
 create or replace function public.set_updated_at()
 returns trigger language plpgsql as $$
@@ -153,6 +188,8 @@ drop trigger if exists atendimentos_set_updated_at on public.atendimentos;
 create trigger atendimentos_set_updated_at before update on public.atendimentos for each row execute function public.set_updated_at();
 drop trigger if exists metas_set_updated_at on public.metas;
 create trigger metas_set_updated_at before update on public.metas for each row execute function public.set_updated_at();
+drop trigger if exists conteudos_set_updated_at on public.conteudos;
+create trigger conteudos_set_updated_at before update on public.conteudos for each row execute function public.set_updated_at();
 
 alter table public.lojas enable row level security;
 alter table public.perfis enable row level security;
@@ -161,12 +198,13 @@ alter table public.vendas enable row level security;
 alter table public.condicionais enable row level security;
 alter table public.atendimentos enable row level security;
 alter table public.metas enable row level security;
+alter table public.conteudos enable row level security;
 
 -- O site usa login próprio para vendedores/gerentes, não supabase.auth.
 -- Estas policies permitem o funcionamento do cliente com a publishable key.
 -- Para produção, migre os acessos de equipe para Supabase Auth e restrinja por auth.uid().
 do $$ declare table_name text; begin
-  foreach table_name in array array['lojas','perfis','tarefas','vendas','condicionais','atendimentos','metas'] loop
+  foreach table_name in array array['lojas','perfis','tarefas','vendas','condicionais','atendimentos','metas','conteudos'] loop
     execute format('drop policy if exists siga_public_select on public.%I', table_name);
     execute format('drop policy if exists siga_public_insert on public.%I', table_name);
     execute format('drop policy if exists siga_public_update on public.%I', table_name);
