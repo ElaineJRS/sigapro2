@@ -493,7 +493,10 @@
                 <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Ouro<input id="goal-gold-input" type="number" min="0" step="0.01" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-700 outline-none"></label>
                 <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Diamante<input id="goal-diamond-input" type="number" min="0.01" step="0.01" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-700 outline-none"></label>
                 <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Mês da meta<input id="goal-month-input" type="month" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-700 outline-none"></label>
-                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Meta mensal<input id="goal-monthly-input" type="number" min="0" step="0.01" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-700 outline-none"></label>
+                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Bronze mensal<input id="goal-monthly-bronze-input" type="number" min="0" step="0.01" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-700 outline-none"></label>
+                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Prata mensal<input id="goal-monthly-silver-input" type="number" min="0" step="0.01" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-700 outline-none"></label>
+                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Ouro mensal<input id="goal-monthly-gold-input" type="number" min="0" step="0.01" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-700 outline-none"></label>
+                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Diamante mensal<input id="goal-monthly-diamond-input" type="number" min="0.01" step="0.01" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-700 outline-none"></label>
                 <div class="flex items-end justify-end lg:col-span-2"><button type="submit" class="rounded-xl bg-amber-500 px-5 py-2.5 text-xs font-black text-white hover:bg-amber-600">Salvar metas</button></div>
             </form>
             <p id="goal-form-feedback" class="mt-3 min-h-4 text-center text-[10px] font-bold text-emerald-600"></p>
@@ -558,7 +561,7 @@
             if (table === 'vendas') return { id: item.id, loja_id: getSession()?.lojaId || null, vendedor_id: item.userId || effectiveUserId(), cliente: item.client || '', valor: item.value, data_hora: item.datetime || item.dateTime, produtos: item.products || [] };
             if (table === 'atendimentos') return { id: item.id, loja_id: getSession()?.lojaId || null, vendedor_id: item.userId || effectiveUserId(), cliente: item.client || '', resultado: item.outcome, resultado_label: item.outcomeLabel || '', valor: item.value || 0, telefone: item.phone || '', observacao: item.notes || '', produtos: item.products || [], produtos_apresentados: item.shownProducts || [], demanda: item.demand || '', venda_id: item.saleId || null, condicional_id: item.conditionalId || null, data_hora: item.datetime || item.dateTime };
             if (table === 'condicionais') return { id: item.id, loja_id: getSession()?.lojaId || null, vendedor_id: item.userId || effectiveUserId(), cliente: item.client, telefone: item.phone, observacao: item.observation || '', produtos: item.products || [], prazo: item.dueDate || null, status: item.status || 'aberta', task_id: item.taskId || null, created_at: item.createdAt };
-            if (table === 'metas') return { id: item.id, loja_id: item.lojaId, vendedor_id: item.userId, semana_inicio: item.weekStart, semana_fim: item.weekEnd, bronze: item.bronze, prata: item.silver, ouro: item.gold, diamante: item.diamond, mes_referencia: `${item.month}-01`, meta_mensal: item.monthly };
+            if (table === 'metas') return { id: item.id, loja_id: item.lojaId, vendedor_id: item.userId, semana_inicio: item.weekStart, semana_fim: item.weekEnd, bronze: item.bronze, prata: item.silver, ouro: item.gold, diamante: item.diamond, mes_referencia: `${item.month}-01`, mensal_bronze: item.monthlyBronze, mensal_prata: item.monthlySilver, mensal_ouro: item.monthlyGold, mensal_diamante: item.monthlyDiamond, meta_mensal: item.monthlyDiamond };
             return item;
         }
 
@@ -567,7 +570,7 @@
             if (table === 'vendas') return { ...row, userId: row.vendedor_id ?? row.userId, client: row.cliente ?? row.client ?? '', value: row.valor ?? row.value, datetime: row.data_hora ?? row.datetime, products: row.produtos ?? row.products ?? [] };
             if (table === 'atendimentos') return { ...row, userId: row.vendedor_id ?? row.userId, client: row.cliente ?? row.client ?? '', outcome: row.resultado ?? row.outcome, outcomeLabel: row.resultado_label ?? row.outcomeLabel, value: row.valor ?? row.value ?? 0, phone: row.telefone ?? row.phone ?? '', notes: row.observacao ?? row.notes ?? '', products: row.produtos ?? row.products ?? [], shownProducts: row.produtos_apresentados ?? row.shownProducts ?? [], demand: row.demanda ?? row.demand ?? '', saleId: row.venda_id ?? row.saleId, conditionalId: row.condicional_id ?? row.conditionalId, datetime: row.data_hora ?? row.datetime };
             if (table === 'condicionais') return { ...row, userId: row.vendedor_id ?? row.userId, client: row.cliente ?? row.client, phone: row.telefone ?? row.phone, observation: row.observacao ?? row.observation ?? '', products: row.produtos ?? row.products ?? [], dueDate: row.prazo ?? row.dueDate, status: row.status ?? 'aberta', taskId: row.task_id ?? row.taskId, createdAt: row.created_at ?? row.createdAt };
-            if (table === 'metas') return { ...row, lojaId: row.loja_id, userId: row.vendedor_id, weekStart: row.semana_inicio, weekEnd: row.semana_fim, bronze: Number(row.bronze || 0), silver: Number(row.prata || 0), gold: Number(row.ouro || 0), diamond: Number(row.diamante || 0), month: String(row.mes_referencia || '').slice(0, 7), monthly: Number(row.meta_mensal || 0) };
+            if (table === 'metas') return { ...row, lojaId: row.loja_id, userId: row.vendedor_id, weekStart: row.semana_inicio, weekEnd: row.semana_fim, bronze: Number(row.bronze || 0), silver: Number(row.prata || 0), gold: Number(row.ouro || 0), diamond: Number(row.diamante || 0), month: String(row.mes_referencia || '').slice(0, 7), monthlyBronze: Number(row.mensal_bronze ?? 0), monthlySilver: Number(row.mensal_prata ?? 0), monthlyGold: Number(row.mensal_ouro ?? 0), monthlyDiamond: Number(row.mensal_diamante ?? row.meta_mensal ?? 0), monthly: Number(row.mensal_diamante ?? row.meta_mensal ?? 0) };
             return row;
         }
 
@@ -812,7 +815,11 @@
                 if (weekEnd < weekStart) return;
                 const userId = document.getElementById('goal-user-input').value;
                 const existingGoal = getGoals().find(item => item.lojaId === session.lojaId && item.userId === userId && item.weekStart === weekStart && item.month === month);
-                const goal = { id: existingGoal?.id || crypto.randomUUID(), lojaId: session.lojaId, userId, weekStart, weekEnd, bronze: Number(document.getElementById('goal-bronze-input').value), silver: Number(document.getElementById('goal-silver-input').value), gold: Number(document.getElementById('goal-gold-input').value), diamond: Number(document.getElementById('goal-diamond-input').value), month, monthly: Number(document.getElementById('goal-monthly-input').value) };
+                const goal = { id: existingGoal?.id || crypto.randomUUID(), lojaId: session.lojaId, userId, weekStart, weekEnd, bronze: Number(document.getElementById('goal-bronze-input').value), silver: Number(document.getElementById('goal-silver-input').value), gold: Number(document.getElementById('goal-gold-input').value), diamond: Number(document.getElementById('goal-diamond-input').value), month, monthlyBronze: Number(document.getElementById('goal-monthly-bronze-input').value), monthlySilver: Number(document.getElementById('goal-monthly-silver-input').value), monthlyGold: Number(document.getElementById('goal-monthly-gold-input').value), monthlyDiamond: Number(document.getElementById('goal-monthly-diamond-input').value), monthly: Number(document.getElementById('goal-monthly-diamond-input').value) };
+                if (goal.bronze > goal.silver || goal.silver > goal.gold || goal.gold > goal.diamond || goal.monthlyBronze > goal.monthlySilver || goal.monthlySilver > goal.monthlyGold || goal.monthlyGold > goal.monthlyDiamond) {
+                    document.getElementById('goal-form-feedback').textContent = 'Cada nível deve ser maior ou igual ao anterior, com Diamante como maior meta.';
+                    return;
+                }
                 const goals = getGoals().filter(item => !(item.lojaId === goal.lojaId && item.userId === goal.userId && item.weekStart === weekStart && item.month === month));
                 saveGoals([...goals, goal]);
                 document.getElementById('goal-form-feedback').textContent = 'Metas salvas com sucesso.';
@@ -841,7 +848,10 @@
                     document.getElementById('goal-gold-input').value = goal.gold;
                     document.getElementById('goal-diamond-input').value = goal.diamond;
                     document.getElementById('goal-month-input').value = goal.month;
-                    document.getElementById('goal-monthly-input').value = goal.monthly;
+                    document.getElementById('goal-monthly-bronze-input').value = goal.monthlyBronze ?? 0;
+                    document.getElementById('goal-monthly-silver-input').value = goal.monthlySilver ?? 0;
+                    document.getElementById('goal-monthly-gold-input').value = goal.monthlyGold ?? 0;
+                    document.getElementById('goal-monthly-diamond-input').value = goal.monthlyDiamond ?? goal.monthly ?? 0;
                     document.getElementById('goal-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
                     return;
                 }
@@ -954,10 +964,13 @@
                 document.getElementById('goal-silver-input').value = existingGoal.silver;
                 document.getElementById('goal-gold-input').value = existingGoal.gold;
                 document.getElementById('goal-diamond-input').value = existingGoal.diamond;
-                document.getElementById('goal-monthly-input').value = existingGoal.monthly;
+                document.getElementById('goal-monthly-bronze-input').value = existingGoal.monthlyBronze ?? 0;
+                document.getElementById('goal-monthly-silver-input').value = existingGoal.monthlySilver ?? 0;
+                document.getElementById('goal-monthly-gold-input').value = existingGoal.monthlyGold ?? 0;
+                document.getElementById('goal-monthly-diamond-input').value = existingGoal.monthlyDiamond ?? existingGoal.monthly ?? 0;
             } else {
                 document.getElementById('goal-week-end-input').value = selectedWeek;
-                ['goal-bronze-input', 'goal-silver-input', 'goal-gold-input', 'goal-diamond-input', 'goal-monthly-input'].forEach(id => { document.getElementById(id).value = ''; });
+                ['goal-bronze-input', 'goal-silver-input', 'goal-gold-input', 'goal-diamond-input', 'goal-monthly-bronze-input', 'goal-monthly-silver-input', 'goal-monthly-gold-input', 'goal-monthly-diamond-input'].forEach(id => { document.getElementById(id).value = ''; });
             }
             renderGoalsLists(session.lojaId);
         }
@@ -974,7 +987,7 @@
             const monthlyGoals = goals.filter((goal, index, list) => list.findIndex(item => item.userId === goal.userId && item.month === goal.month) === index);
             monthlyList.innerHTML = monthlyGoals.length ? monthlyGoals.map(goal => {
                 const user = users.find(item => item.id === goal.userId);
-                return `<article class="rounded-xl border border-slate-100 bg-slate-50 p-3"><div class="flex items-start justify-between gap-2"><div><p class="text-xs font-black text-slate-700">${escapeHtml(user?.name || 'Vendedor')}</p><p class="mt-1 text-[10px] font-semibold text-slate-500">${goal.month}</p><p class="mt-1 text-[10px] font-black text-indigo-600">${money(goal.monthly)}</p></div><div class="flex gap-1"><button type="button" data-edit-goal="${goal.id}" aria-label="Editar meta mensal" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-white hover:text-indigo-600"><i data-lucide="pencil" class="h-4 w-4"></i></button><button type="button" data-delete-goal="${goal.id}" aria-label="Excluir meta mensal" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-white hover:text-red-600"><i data-lucide="trash-2" class="h-4 w-4"></i></button></div></div></article>`;
+                return `<article class="rounded-xl border border-slate-100 bg-slate-50 p-3"><div class="flex items-start justify-between gap-2"><div><p class="text-xs font-black text-slate-700">${escapeHtml(user?.name || 'Vendedor')}</p><p class="mt-1 text-[10px] font-semibold text-slate-500">${goal.month}</p><p class="mt-1 text-[10px] text-slate-400">B ${money(goal.monthlyBronze)} · P ${money(goal.monthlySilver)} · O ${money(goal.monthlyGold)} · D ${money(goal.monthlyDiamond ?? goal.monthly)}</p></div><div class="flex gap-1"><button type="button" data-edit-goal="${goal.id}" aria-label="Editar meta mensal" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-white hover:text-indigo-600"><i data-lucide="pencil" class="h-4 w-4"></i></button><button type="button" data-delete-goal="${goal.id}" aria-label="Excluir meta mensal" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-white hover:text-red-600"><i data-lucide="trash-2" class="h-4 w-4"></i></button></div></div></article>`;
             }).join('') : '<p class="text-xs text-slate-400">Nenhuma meta mensal criada.</p>';
             lucide.createIcons();
         }
@@ -996,22 +1009,23 @@
             const goal = goalForCurrentUser();
             const today = getLocalDateKey();
             const weekly = goal.weekly || { bronze: 0, silver: 0, gold: 0, diamond: 0, weekStart: today, weekEnd: today };
-            const monthly = goal.monthly || { month: today.slice(0, 7), monthly: 0 };
+            const monthly = goal.monthly || { month: today.slice(0, 7), monthlyBronze: 0, monthlySilver: 0, monthlyGold: 0, monthlyDiamond: 0 };
             const sales = getSales();
             const currentPeriod = window.activeGoalPeriod || 'semana';
             const weekDays = daysBetween(weekly.weekStart, weekly.weekEnd);
             const start = currentPeriod === 'dia' ? today : currentPeriod === 'mes' ? `${monthly.month}-01` : weekly.weekStart;
             const end = currentPeriod === 'dia' ? today : currentPeriod === 'mes' ? `${monthly.month}-${String(new Date(Number(monthly.month.slice(0, 4)), Number(monthly.month.slice(5, 7)), 0).getDate()).padStart(2, '0')}` : weekly.weekEnd;
-            const target = currentPeriod === 'dia' ? weekly.diamond / weekDays : currentPeriod === 'mes' ? monthly.monthly : weekly.diamond;
+            const target = currentPeriod === 'dia' ? weekly.diamond / weekDays : currentPeriod === 'mes' ? monthly.monthlyDiamond : weekly.diamond;
             const total = sales.filter(sale => sale.date >= start && sale.date <= end).reduce((sum, sale) => sum + Number(sale.value || 0), 0);
-            const goalValues = currentPeriod === 'mes' ? { bronze: monthly.monthly * 0.25, silver: monthly.monthly * 0.5, gold: monthly.monthly * 0.75, diamond: monthly.monthly } : currentPeriod === 'dia' ? { bronze: weekly.bronze / weekDays, silver: weekly.silver / weekDays, gold: weekly.gold / weekDays, diamond: weekly.diamond / weekDays } : weekly;
+            const goalValues = currentPeriod === 'mes' ? { bronze: monthly.monthlyBronze, silver: monthly.monthlySilver, gold: monthly.monthlyGold, diamond: monthly.monthlyDiamond } : currentPeriod === 'dia' ? { bronze: weekly.bronze / weekDays, silver: weekly.silver / weekDays, gold: weekly.gold / weekDays, diamond: weekly.diamond / weekDays } : { bronze: weekly.bronze, silver: weekly.silver, gold: weekly.gold, diamond: weekly.diamond };
             return { goal: goalValues, target, total, start, end };
         }
 
         function renderGoalMarkers(goal) {
-            const max = Math.max(1, goal.diamond);
+            const values = { bronze: Number(goal.bronze || 0), silver: Number(goal.silver || 0), gold: Number(goal.gold || 0), diamond: Number(goal.diamond || 0) };
+            const max = Math.max(1, values.diamond);
             const tiers = [['bronze', 'Bronze', 'tier-bronze'], ['silver', 'Prata', 'tier-silver'], ['gold', 'Ouro', 'tier-gold'], ['diamond', 'Diamante', 'tier-diamond']];
-            document.getElementById('goal-markers').innerHTML = tiers.map(([key, label, color]) => `<button type="button" data-goal-tier="${key}" class="absolute -translate-x-1/2 text-center" style="left:${Math.min(100, goal[key] / max * 100)}%"><span class="mx-auto block h-2 w-0.5 bg-slate-300"></span><span class="mt-1 block whitespace-nowrap rounded-full px-1 text-[8px] font-black uppercase ${color} text-white">${label}</span></button>`).join('');
+            document.getElementById('goal-markers').innerHTML = tiers.map(([key, label, color]) => `<button type="button" data-goal-tier="${key}" class="absolute -translate-x-1/2 text-center" style="left:${Math.min(100, values[key] / max * 100)}%"><span class="mx-auto block h-2 w-0.5 bg-slate-300"></span><span class="mt-1 block whitespace-nowrap rounded-full px-1 text-[8px] font-black uppercase ${color} text-white">${label}</span></button>`).join('');
         }
 
         function renderGoalCard() {
@@ -1025,7 +1039,7 @@
             document.getElementById('falta-valor').textContent = money(Math.max(0, data.target - data.total));
             document.getElementById('progress-fill').style.width = `${percent}%`;
             const badge = document.getElementById('badge-nivel');
-            const tier = data.total >= goal.diamond ? ['Diamante', 'tier-diamond'] : data.total >= goal.gold ? ['Ouro', 'tier-gold'] : data.total >= goal.silver ? ['Prata', 'tier-silver'] : ['Bronze', 'tier-bronze'];
+            const tier = data.total >= Number(goal.diamond || 0) ? ['Diamante', 'tier-diamond'] : data.total >= Number(goal.gold || 0) ? ['Ouro', 'tier-gold'] : data.total >= Number(goal.silver || 0) ? ['Prata', 'tier-silver'] : ['Bronze', 'tier-bronze'];
             badge.textContent = tier[0]; badge.className = `text-[10px] text-white font-black px-3 py-1 rounded-full uppercase ${tier[1]}`;
             renderGoalMarkers(goal);
         }

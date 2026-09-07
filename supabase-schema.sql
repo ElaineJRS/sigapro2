@@ -118,6 +118,12 @@ create table if not exists public.metas (
   unique (vendedor_id, semana_inicio, mes_referencia)
 );
 
+alter table public.metas add column if not exists mensal_bronze numeric(12,2) not null default 0;
+alter table public.metas add column if not exists mensal_prata numeric(12,2) not null default 0;
+alter table public.metas add column if not exists mensal_ouro numeric(12,2) not null default 0;
+alter table public.metas add column if not exists mensal_diamante numeric(12,2) not null default 0;
+update public.metas set mensal_diamante = meta_mensal where mensal_diamante = 0 and meta_mensal > 0;
+
 create index if not exists perfis_loja_id_idx on public.perfis(loja_id);
 create index if not exists tarefas_responsavel_data_idx on public.tarefas(responsavel_id, data);
 create index if not exists vendas_vendedor_data_idx on public.vendas(vendedor_id, data_hora);
