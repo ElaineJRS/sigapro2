@@ -146,16 +146,16 @@ insert into public.conteudos (tipo, texto, autor) values
 ('frase', 'A persistência realiza o impossível.', 'Provérbio'),
 ('frase', 'Cada atendimento é uma nova oportunidade de criar valor.', 'SIGA'),
 ('frase', 'Grandes resultados começam com uma decisão simples: continuar.', 'SIGA'),
-('dica', 'Faça perguntas abertas para entender o que o cliente realmente procura.'),
-('dica', 'Apresente primeiro o benefício do produto e depois explique suas características.'),
-('dica', 'Confirme o que o cliente valorizou antes de falar sobre preço.'),
-('dica', 'Ofereça duas opções adequadas para facilitar a decisão.'),
-('dica', 'Use o nome do cliente durante o atendimento para criar proximidade.'),
-('dica', 'Ao ouvir uma objeção, agradeça e investigue antes de responder.'),
-('dica', 'Mostre produtos complementares que resolvam uma necessidade relacionada.'),
-('dica', 'Finalize com um próximo passo claro: experimentar, reservar ou concluir.'),
-('dica', 'Registre atendimentos não convertidos para identificar oportunidades de melhoria.'),
-('dica', 'Faça follow-up no prazo combinado e cumpra exatamente o que prometeu.')
+('dica', 'Faça perguntas abertas para entender o que o cliente realmente procura.', ''),
+('dica', 'Apresente primeiro o benefício do produto e depois explique suas características.', ''),
+('dica', 'Confirme o que o cliente valorizou antes de falar sobre preço.', ''),
+('dica', 'Ofereça duas opções adequadas para facilitar a decisão.', ''),
+('dica', 'Use o nome do cliente durante o atendimento para criar proximidade.', ''),
+('dica', 'Ao ouvir uma objeção, agradeça e investigue antes de responder.', ''),
+('dica', 'Mostre produtos complementares que resolvam uma necessidade relacionada.', ''),
+('dica', 'Finalize com um próximo passo claro: experimentar, reservar ou concluir.', ''),
+('dica', 'Registre atendimentos não convertidos para identificar oportunidades de melhoria.', ''),
+('dica', 'Faça follow-up no prazo combinado e cumpra exatamente o que prometeu.', '')
 on conflict (tipo, texto) do nothing;
 
 create index if not exists perfis_loja_id_idx on public.perfis(loja_id);
