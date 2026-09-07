@@ -27,9 +27,11 @@
         .date-carousel::-webkit-scrollbar { display: none; }
         .observation-preview { max-height: 2.8em; overflow: hidden; cursor: pointer; }
         .observation-preview.observation-expanded { max-height: none; }
+        #sync-error { position: fixed; left: 1rem; right: 1rem; bottom: 1rem; z-index: 100; display: none; }
     </style>
 </head>
 <body class="bg-[#FBFDFF] text-slate-900 min-h-screen pb-28">
+    <div id="sync-error" class="rounded-xl bg-red-600 px-4 py-3 text-xs font-bold text-white shadow-xl" role="alert"></div>
 
     <!-- LANDING -->
     <div id="view-landing" class="hidden min-h-screen items-center justify-center bg-[#FBFDFF] p-6">
@@ -454,7 +456,7 @@
             <div class="flex items-start justify-between border-b border-slate-100 p-5"><div><p class="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500">Nova venda</p><h2 id="new-sale-title" class="mt-1 text-lg font-black text-slate-800">Registrar venda</h2></div><button type="button" id="close-new-sale" aria-label="Fechar" class="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-500"><i data-lucide="x" class="w-4 h-4"></i></button></div>
             <form id="new-sale-form" class="space-y-3 p-5">
                 <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Cliente (opcional)<input id="sale-client-input" maxlength="100" placeholder="Nome do cliente" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-700 outline-none focus:border-indigo-400"></label>
-                <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Valor da venda<input id="sale-value-input" required type="number" min="0.01" step="0.01" placeholder="0,00" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-700 outline-none focus:border-indigo-400"></label>
+                <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Valor da venda<input id="sale-value-input" required inputmode="decimal" data-money-input placeholder="R$ 0,00" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-700 outline-none focus:border-indigo-400"></label>
                 <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Data e horário<input id="sale-datetime-input" required type="datetime-local" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-700 outline-none focus:border-indigo-400"></label>
                 <div>
                     <p class="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Produtos vendidos</p>
@@ -632,7 +634,11 @@
             const rows = list.map(item => table === 'lojas' ? { id: item.id, nome: item.name, slug: item.slug, configuracoes: item.configuracoes || {}, created_at: item.createdAt } : table === 'perfis' ? { id: item.id, loja_id: item.lojaId, nome: item.name, cargo: item.role, username: item.username, password: item.password, slug: item.slug, full_slug: item.fullSlug, created_at: item.createdAt } : databaseRowFromApp(table, item));
             if (!rows.length) return;
             const { error } = await sigaSupabase.from(table).upsert(rows);
-            if (error) console.warn(`Falha ao sincronizar ${table}:`, error.message);
+            if (error) {
+                console.warn(`Falha ao sincronizar ${table}:`, error.message);
+                const notice = document.getElementById('sync-error');
+                if (notice) { notice.textContent = `Não foi possível salvar em ${table}: ${error.message}`; notice.style.display = 'block'; window.setTimeout(() => { notice.style.display = 'none'; }, 7000); }
+            }
         }
 
         async function hydrateFromSupabase() {
@@ -660,6 +666,26 @@
                 .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/(^-+|-+$)/g, '') || 'item';
+        }
+
+        function parseMoneyInput(value) {
+            const normalized = String(value || '').replace(/[^0-9,.-]/g, '').replace(/\./g, '').replace(',', '.');
+            return Number(normalized) || 0;
+        }
+
+        function formatMoneyInput(input) {
+            const value = parseMoneyInput(input.value);
+            input.value = value ? value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '';
+        }
+
+        function bindMoneyInputs() {
+            document.querySelectorAll('[data-money-input]').forEach(input => {
+                input.addEventListener('input', () => {
+                    const digits = input.value.replace(/\D/g, '');
+                    input.value = digits ? (Number(digits) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '';
+                });
+                input.addEventListener('blur', () => formatMoneyInput(input));
+            });
         }
 
         function uniqueSlugFor(list, base) {
