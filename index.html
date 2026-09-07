@@ -129,8 +129,8 @@
             <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2">
                 <div class="flex items-center gap-2 text-xs font-bold text-amber-700"><i data-lucide="shield" class="h-4 w-4"></i><span id="manager-bar-label">Modo gerente</span></div>
                 <div class="flex items-center gap-2">
-                    <select id="manager-vendor-select" class="rounded-lg border border-amber-200 bg-white px-2 py-1 text-xs font-bold text-slate-700"></select>
-                    <button type="button" id="manager-overview-button" class="rounded-lg bg-amber-500 px-3 py-1.5 text-[10px] font-black text-white hover:bg-amber-600">Visão geral</button>
+                    <button type="button" id="manager-overview-button" class="rounded-lg bg-amber-500 px-3 py-1.5 text-[10px] font-black text-white hover:bg-amber-600">Tarefas</button>
+                    <button type="button" id="manager-report-button" class="rounded-lg bg-emerald-600 px-3 py-1.5 text-[10px] font-black text-white hover:bg-emerald-700">Relatório</button>
                     <button type="button" id="manager-goals-button" class="rounded-lg bg-indigo-600 px-3 py-1.5 text-[10px] font-black text-white hover:bg-indigo-700">Metas</button>
                 </div>
             </div>
@@ -489,6 +489,19 @@
         <div id="manager-overview-list" class="space-y-3"></div>
     </section>
 
+    <section id="manager-report-page" class="hidden max-w-5xl mx-auto space-y-6 p-4">
+        <div><h2 class="text-2xl font-black text-slate-800">Relatório da loja</h2><p class="mt-1 text-xs font-medium text-slate-500">Acompanhe vendas da equipe e registre vendas realizadas pela loja.</p></div>
+        <section class="grid gap-3 rounded-[2rem] border border-slate-100 bg-white p-5 shadow-sm md:grid-cols-4">
+            <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Vendedor<select id="manager-report-vendor" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold outline-none"></select></label>
+            <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Período<select id="manager-report-period" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold outline-none"><option value="day">Hoje</option><option value="week">Semana</option><option value="month">Mês</option></select></label>
+            <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Início<input id="manager-report-start" type="date" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold outline-none"></label>
+            <label class="text-[10px] font-black uppercase tracking-wider text-slate-400">Fim<input id="manager-report-end" type="date" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold outline-none"></label>
+        </section>
+        <div class="grid gap-3 md:grid-cols-3"><div class="rounded-2xl bg-indigo-600 p-5 text-white"><p class="text-[10px] font-black uppercase">Vendas equipe</p><p id="manager-report-total" class="mt-1 text-3xl font-black">R$ 0,00</p></div><div class="rounded-2xl bg-emerald-500 p-5 text-white"><p class="text-[10px] font-black uppercase">Quantidade</p><p id="manager-report-count" class="mt-1 text-3xl font-black">0</p></div><div class="rounded-2xl bg-amber-400 p-5 text-white"><p class="text-[10px] font-black uppercase">Meta mensal loja</p><p id="manager-store-goal-total" class="mt-1 text-3xl font-black">R$ 0,00</p></div></div>
+        <section class="rounded-[2rem] border border-slate-100 bg-white p-5 shadow-sm"><h3 class="mb-3 text-sm font-black uppercase tracking-wider text-slate-800">Vendas por vendedor</h3><div id="manager-report-list" class="space-y-2"></div></section>
+        <section class="rounded-[2rem] border border-emerald-100 bg-white p-5 shadow-sm"><h3 class="mb-3 text-sm font-black uppercase tracking-wider text-slate-800">Venda da loja para meta mensal</h3><form id="manager-store-sale-form" class="grid gap-3 md:grid-cols-4"><input id="manager-store-sale-client" required placeholder="Nome/descrição" class="rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none"><input id="manager-store-sale-value" required type="number" min="0.01" step="0.01" placeholder="Valor" class="rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none"><input id="manager-store-sale-date" required type="date" class="rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none"><button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white">Lançar venda da loja</button></form></section>
+    </section>
+
     <!-- CONFIGURAÇÃO DE METAS DO GERENTE -->
     <section id="manager-goals-page" class="hidden max-w-5xl mx-auto p-4 space-y-6">
         <div class="flex items-center gap-3"><button type="button" data-back-dashboard aria-label="Voltar ao início" class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600"><i data-lucide="arrow-left" class="h-4 w-4"></i></button><div><h2 class="text-2xl font-black text-slate-800">Metas da equipe</h2><p class="mt-1 text-xs font-medium text-slate-500">Crie e edite as metas de cada vendedor.</p></div></div>
@@ -565,6 +578,7 @@
             'siga-metas': 'metas',
             'siga-metas-mensais': 'metas_mensais',
             'siga-metas-semanais': 'metas_semanais',
+            'siga-vendas-loja': 'vendas_loja',
             'siga-conteudos': 'conteudos'
         };
 
@@ -577,6 +591,7 @@
             if (table === 'conteudos') return { id: item.id, tipo: item.type, texto: item.text, autor: item.author || '', ativo: item.active !== false };
             if (table === 'metas_mensais') return { id: item.id, loja_id: item.lojaId, mes_referencia: `${item.month}-01`, valor_total: item.total };
             if (table === 'metas_semanais') return { id: item.id, loja_id: item.lojaId, meta_mensal_id: item.monthlyGoalId, nome: item.name, semana_inicio: item.weekStart, semana_fim: item.weekEnd, valor_total: item.total, distribuicao: item.distributions || [] };
+            if (table === 'vendas_loja') return { id: item.id, loja_id: item.lojaId, descricao: item.client, valor: item.value, data: item.date };
             return item;
         }
 
@@ -589,6 +604,7 @@
             if (table === 'conteudos') return { ...row, type: row.tipo, text: row.texto, author: row.autor || '', active: row.ativo !== false };
             if (table === 'metas_mensais') return { ...row, lojaId: row.loja_id, month: String(row.mes_referencia || '').slice(0, 7), total: Number(row.valor_total || 0) };
             if (table === 'metas_semanais') return { ...row, lojaId: row.loja_id, monthlyGoalId: row.meta_mensal_id, name: row.nome, weekStart: row.semana_inicio, weekEnd: row.semana_fim, total: Number(row.valor_total || 0), distributions: row.distribuicao || [] };
+            if (table === 'vendas_loja') return { ...row, lojaId: row.loja_id, client: row.descricao, value: Number(row.valor || 0), date: row.data, datetime: `${row.data}T12:00:00`, storeSale: true };
             return row;
         }
 
@@ -612,7 +628,17 @@
                 const { data, error } = await sigaSupabase.from(table).select('*');
                 if (error || !data) return;
                 const list = data.map(row => table === 'lojas' ? { ...row, name: row.nome ?? row.name, createdAt: row.criado_em ?? row.created_at ?? row.createdAt } : table === 'perfis' ? { ...row, lojaId: row.loja_id ?? row.lojaId, name: row.nome ?? row.name, role: row.cargo ?? row.funcao ?? row.role, username: row.username ?? row.login, password: row.password ?? row.senha, slug: row.slug, fullSlug: row.full_slug ?? row.link_slug ?? row.fullSlug, createdAt: row.created_at ?? row.criado_em ?? row.createdAt } : databaseRowToApp(table, row));
-                if (list.length) localStorage.setItem(storageKey, JSON.stringify(list));
+                if (list.length) {
+                    const scopedTables = new Set(['tarefas', 'vendas', 'atendimentos', 'condicionais', 'vendas_loja']);
+                    if (scopedTables.has(table)) {
+                        const groups = list.reduce((result, item) => {
+                            const scopeId = table === 'vendas_loja' ? item.lojaId : (item.userId || item.ownerId);
+                            if (scopeId) (result[scopeId] ||= []).push(item);
+                            return result;
+                        }, {});
+                        Object.entries(groups).forEach(([userId, items]) => localStorage.setItem(`${storageKey}::${userId}`, JSON.stringify(items)));
+                    } else localStorage.setItem(storageKey, JSON.stringify(list));
+                }
             }));
         }
 
@@ -757,14 +783,16 @@
                 renderMasterPanel();
                 return;
             }
-            if (hash === 'app' || hash === 'manager-overview' || hash === 'manager-goals') {
+            if (hash === 'app' || hash === 'manager-report' || hash === 'manager-overview' || hash === 'manager-goals') {
                 if (session?.type !== 'user') { location.hash = ''; return; }
+                if (hash === 'app' && session.role === 'gerente') { location.hash = 'manager-report'; return; }
                 if ((hash === 'manager-overview' || hash === 'manager-goals') && session.role !== 'gerente') { location.hash = 'app'; return; }
                 hideAllViews();
                 document.getElementById('app-shell').classList.remove('hidden');
                 startAppIfNeeded();
                 renderManagerBar();
                 if (hash === 'manager-overview') showPage('manager-overview');
+                if (hash === 'manager-report') showPage('manager-report');
                 if (hash === 'manager-goals') showPage('manager-goals');
                 return;
             }
@@ -822,26 +850,15 @@
             label.textContent = session?.name ? `${session.name}${session.role === 'gerente' ? ' · Gerente' : ''}` : '';
             if (!session || session.type !== 'user' || session.role !== 'gerente') { bar.classList.add('hidden'); return; }
             bar.classList.remove('hidden');
-            const vendedores = getUsuarios().filter(item => item.lojaId === session.lojaId && item.role === 'vendedor');
-            const select = document.getElementById('manager-vendor-select');
-            const currentViewing = session.viewingUserId || session.userId;
-            select.innerHTML = `<option value="${session.userId}">Minha visão (Gerente)</option>` + vendedores.map(vendedor => `<option value="${vendedor.id}">${escapeHtml(vendedor.name)}</option>`).join('');
-            select.value = currentViewing;
-            document.getElementById('manager-bar-label').textContent = currentViewing === session.userId ? 'Visualizando: minha própria conta' : `Visualizando: ${escapeHtml(vendedores.find(item => item.id === currentViewing)?.name || '')}`;
+            document.getElementById('desktop-navigation').classList.add('hidden');
+            document.getElementById('mobile-navigation').classList.add('hidden');
+            document.getElementById('fab-button').classList.add('hidden');
+            document.getElementById('manager-bar-label').textContent = `Loja: ${escapeHtml(getLojas().find(store => store.id === session.lojaId)?.name || '')}`;
         }
 
         function bindManagerBar() {
-            document.getElementById('manager-vendor-select').addEventListener('change', event => {
-                const session = getSession();
-                session.viewingUserId = event.target.value === session.userId ? null : event.target.value;
-                saveSession(session);
-                renderManagerBar();
-                const currentRoute = location.hash.replace(/^#/, '');
-                if (currentRoute === 'manager-goals') { renderGoalForm(); renderGoalCard(); }
-                else if (currentRoute === 'manager-overview') renderManagerOverview();
-                else refreshAllAppViews();
-            });
             document.getElementById('manager-overview-button').addEventListener('click', () => { location.hash = 'manager-overview'; });
+            document.getElementById('manager-report-button').addEventListener('click', () => { location.hash = 'manager-report'; });
             document.getElementById('manager-goals-button').addEventListener('click', () => { location.hash = 'manager-goals'; });
             document.getElementById('monthly-goal-form').addEventListener('submit', event => {
                 event.preventDefault();
@@ -927,7 +944,7 @@
             vendedores.forEach(vendedor => {
                 let tasks = [];
                 try { tasks = JSON.parse(localStorage.getItem(`siga-tarefas::${vendedor.id}`)) || []; } catch (error) { tasks = []; }
-                tasks.forEach(task => merged.push({ ...task, vendedorNome: vendedor.name }));
+                tasks.forEach(task => merged.push({ ...task, vendedorId: vendedor.id, vendedorNome: vendedor.name }));
             });
             const now = new Date();
             return merged.sort((first, second) => {
@@ -939,12 +956,26 @@
             });
         }
 
+        function saveManagerTask(userId, taskId, changes) {
+            const key = `siga-tarefas::${userId}`;
+            let tasks = []; try { tasks = JSON.parse(localStorage.getItem(key)) || []; } catch (error) { tasks = []; }
+            const updated = tasks.map(task => task.id === taskId ? { ...task, ...changes } : task);
+            localStorage.setItem(key, JSON.stringify(updated));
+            const session = getSession();
+            const previousViewing = session.viewingUserId;
+            session.viewingUserId = userId;
+            saveSession(session);
+            syncStoredList(key, updated);
+            session.viewingUserId = previousViewing;
+            saveSession(session);
+        }
+
         function renderManagerOverview() {
             const session = getSession();
             const tasks = collectAllTasksForStore(session.lojaId);
             document.getElementById('manager-overview-list').innerHTML = tasks.length ? tasks.map(task => `
                 <article class="flex items-center gap-3 rounded-2xl border p-3 ${managerTaskStatusClasses(task)}">
-                    <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border-2 ${task.completed ? 'border-emerald-500 bg-emerald-500 text-white' : isTaskOverdueRaw(task, new Date()) ? 'border-red-400 bg-red-100 text-red-600' : 'border-amber-400 bg-amber-100 text-amber-600'}">${task.completed ? '<i data-lucide="check" class="w-4 h-4"></i>' : isTaskOverdueRaw(task, new Date()) ? '<i data-lucide="clock-alert" class="w-4 h-4"></i>' : ''}</div>
+                    <button type="button" data-manager-toggle-task="${task.id}" data-task-owner="${task.vendedorId}" aria-label="${task.completed ? 'Reabrir' : 'Concluir'} tarefa" class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border-2 ${task.completed ? 'border-emerald-500 bg-emerald-500 text-white' : isTaskOverdueRaw(task, new Date()) ? 'border-red-400 bg-red-100 text-red-600' : 'border-amber-400 bg-amber-100 text-amber-600'}">${task.completed ? '<i data-lucide="check" class="w-4 h-4"></i>' : isTaskOverdueRaw(task, new Date()) ? '<i data-lucide="clock-alert" class="w-4 h-4"></i>' : ''}</button>
                     <div class="min-w-0 flex-1">
                         <p class="truncate text-xs font-bold ${task.completed ? 'text-emerald-800 line-through' : isTaskOverdueRaw(task, new Date()) ? 'text-red-800' : 'text-slate-700'}">${escapeHtml(task.title)}</p>
                         <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-semibold text-slate-400">
@@ -953,10 +984,86 @@
                             <span>${task.owner === 'manager' ? 'Gerente' : 'Vendedor'}</span>
                             ${managerTaskStatusLabel(task)}
                         </div>
+                        <button type="button" data-manager-observe-task="${task.id}" data-task-owner="${task.vendedorId}" class="mt-2 text-[10px] font-black text-indigo-600">Adicionar observação</button>
                     </div>
                 </article>
             `).join('') : '<p class="rounded-2xl bg-white p-4 text-xs text-slate-400">Nenhuma tarefa registrada pela equipe.</p>';
             lucide.createIcons();
+        }
+
+        document.addEventListener('click', event => {
+            const toggle = event.target.closest('[data-manager-toggle-task]');
+            if (toggle && getSession()?.role === 'gerente') {
+                const task = collectAllTasksForStore(getSession().lojaId).find(item => item.id === toggle.dataset.managerToggleTask && item.vendedorId === toggle.dataset.taskOwner);
+                if (task) { saveManagerTask(task.vendedorId, task.id, { completed: !task.completed }); renderManagerOverview(); }
+            }
+            const observe = event.target.closest('[data-manager-observe-task]');
+            if (observe && getSession()?.role === 'gerente') {
+                const note = window.prompt('Observação para esta tarefa:', '');
+                if (note !== null) { const task = collectAllTasksForStore(getSession().lojaId).find(item => item.id === observe.dataset.managerObserveTask && item.vendedorId === observe.dataset.taskOwner); if (task) { saveManagerTask(task.vendedorId, task.id, { observation: sanitizeObservation(note) }); renderManagerOverview(); } }
+            }
+        });
+
+        function getSalesForUser(userId) {
+            try { return JSON.parse(localStorage.getItem(`siga-vendas::${userId}`)) || []; } catch (error) { return []; }
+        }
+
+        function managerStoreSales() {
+            const session = getSession();
+            const sellerSales = getUsuarios().filter(user => user.lojaId === session?.lojaId).flatMap(user => getSalesForUser(user.id).map(sale => ({ ...sale, sellerId: user.id, sellerName: user.name })));
+            let storeSales = []; try { storeSales = JSON.parse(localStorage.getItem(`siga-vendas-loja::${session?.lojaId}`)) || []; } catch (error) { storeSales = []; }
+            return [...sellerSales, ...storeSales.map(sale => ({ ...sale, sellerName: 'Venda da loja' }))];
+        }
+
+        function setManagerReportDates() {
+            const today = getLocalDateKey();
+            const period = document.getElementById('manager-report-period').value;
+            const start = new Date(`${today}T12:00:00`);
+            if (period === 'week') start.setDate(start.getDate() - (start.getDay() === 0 ? 6 : start.getDay() - 1));
+            if (period === 'month') start.setDate(1);
+            document.getElementById('manager-report-start').value = getLocalDateKey(start);
+            const end = new Date(`${today}T12:00:00`);
+            if (period === 'week') end.setDate(start.getDate() + 6);
+            if (period === 'month') end.setMonth(start.getMonth() + 1, 0);
+            document.getElementById('manager-report-end').value = getLocalDateKey(end);
+        }
+
+        function renderManagerReport() {
+            const session = getSession();
+            const sales = managerStoreSales();
+            const selectedSeller = document.getElementById('manager-report-vendor').value;
+            const start = document.getElementById('manager-report-start').value;
+            const end = document.getElementById('manager-report-end').value;
+            const filtered = sales.filter(sale => (!selectedSeller || sale.sellerId === selectedSeller) && sale.date >= start && sale.date <= end);
+            const grouped = filtered.reduce((result, sale) => { result[sale.sellerName] = (result[sale.sellerName] || 0) + Number(sale.value || 0); return result; }, {});
+            document.getElementById('manager-report-total').textContent = money(filtered.reduce((sum, sale) => sum + Number(sale.value || 0), 0));
+            document.getElementById('manager-report-count').textContent = filtered.length;
+            const storeGoals = getMonthlyGoals().filter(goal => goal.lojaId === session?.lojaId && goal.month === getLocalDateKey().slice(0, 7));
+            document.getElementById('manager-store-goal-total').textContent = money(storeGoals.reduce((sum, goal) => sum + Number(goal.total || 0), 0));
+            document.getElementById('manager-report-list').innerHTML = Object.keys(grouped).length ? Object.entries(grouped).map(([name, value]) => `<div class="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2"><span class="text-xs font-bold text-slate-700">${escapeHtml(name)}</span><strong class="text-sm font-black text-indigo-600">${money(value)}</strong></div>`).join('') : '<p class="text-xs text-slate-400">Nenhuma venda no período.</p>';
+        }
+
+        function initManagerReport() {
+            const session = getSession();
+            const select = document.getElementById('manager-report-vendor');
+            select.innerHTML = '<option value="">Todos os vendedores</option>' + getUsuarios().filter(user => user.lojaId === session?.lojaId && user.role === 'vendedor').map(user => `<option value="${user.id}">${escapeHtml(user.name)}</option>`).join('');
+            document.getElementById('manager-store-sale-date').value = getLocalDateKey();
+            setManagerReportDates();
+            if (document.getElementById('manager-report-page').dataset.bound === 'true') { renderManagerReport(); return; }
+            document.getElementById('manager-report-page').dataset.bound = 'true';
+            ['manager-report-vendor', 'manager-report-start', 'manager-report-end'].forEach(id => document.getElementById(id).addEventListener('change', renderManagerReport));
+            document.getElementById('manager-report-period').addEventListener('change', () => { setManagerReportDates(); renderManagerReport(); });
+            document.getElementById('manager-store-sale-form').addEventListener('submit', event => {
+                event.preventDefault();
+                const session = getSession();
+                const storeKey = `siga-vendas-loja::${session.lojaId}`;
+                let sales = []; try { sales = JSON.parse(localStorage.getItem(storeKey)) || []; } catch (error) { sales = []; }
+                sales.push({ id: crypto.randomUUID(), client: document.getElementById('manager-store-sale-client').value.trim(), value: Number(document.getElementById('manager-store-sale-value').value), date: document.getElementById('manager-store-sale-date').value, datetime: `${document.getElementById('manager-store-sale-date').value}T12:00:00`, storeSale: true });
+                localStorage.setItem(storeKey, JSON.stringify(sales));
+                syncStoredList(`siga-vendas-loja::${session.lojaId}`, sales);
+                event.target.reset(); document.getElementById('manager-store-sale-date').value = getLocalDateKey();
+            });
+            renderManagerReport();
         }
 
         function getMonthlyGoals() { try { const saved = JSON.parse(localStorage.getItem('siga-metas-mensais')); return Array.isArray(saved) ? saved : []; } catch (error) { return []; } }
@@ -1039,11 +1146,13 @@
             const userDistribution = weekly.distributions.find(item => item.userId === effectiveUserId()) || { value: 0, percentage: 0 };
             const sales = getSales();
             const currentPeriod = window.activeGoalPeriod || 'semana';
+            let storeSales = [];
+            if (currentPeriod === 'mes') { try { storeSales = JSON.parse(localStorage.getItem(`siga-vendas-loja::${getSession()?.lojaId}`)) || []; } catch (error) { storeSales = []; } }
             const weekDays = daysBetween(weekly.weekStart, weekly.weekEnd);
             const start = currentPeriod === 'dia' ? today : currentPeriod === 'mes' ? `${monthly.month}-01` : weekly.weekStart;
             const end = currentPeriod === 'dia' ? today : currentPeriod === 'mes' ? `${monthly.month}-${String(new Date(Number(monthly.month.slice(0, 4)), Number(monthly.month.slice(5, 7)), 0).getDate()).padStart(2, '0')}` : weekly.weekEnd;
             const target = currentPeriod === 'dia' ? Number(userDistribution.value) / weekDays : currentPeriod === 'mes' ? monthly.total : Number(userDistribution.value);
-            const total = sales.filter(sale => sale.date >= start && sale.date <= end).reduce((sum, sale) => sum + Number(sale.value || 0), 0);
+            const total = [...sales, ...storeSales].filter(sale => sale.date >= start && sale.date <= end).reduce((sum, sale) => sum + Number(sale.value || 0), 0);
             const goalValues = currentPeriod === 'mes' ? { bronze: monthly.total * 0.25, silver: monthly.total * 0.5, gold: monthly.total * 0.75, diamond: monthly.total } : { bronze: Number(userDistribution.value) * 0.25, silver: Number(userDistribution.value) * 0.5, gold: Number(userDistribution.value) * 0.75, diamond: Number(userDistribution.value) };
             return { goal: goalValues, target, total, start, end };
         }
@@ -1452,6 +1561,7 @@
             const conditionalPage = document.getElementById('conditional-page');
             const managerOverviewPage = document.getElementById('manager-overview-page');
             const managerGoalsPage = document.getElementById('manager-goals-page');
+            const managerReportPage = document.getElementById('manager-report-page');
             const navInicio = document.getElementById('nav-inicio');
             const navTasks = document.getElementById('nav-tasks');
             const navSales = document.getElementById('nav-sales');
@@ -1460,7 +1570,7 @@
             const indicator = document.getElementById('nav-indicator');
             document.querySelectorAll('[data-desktop-page]').forEach(button => { const active = button.dataset.desktopPage === pageName; button.classList.toggle('bg-indigo-600', active); button.classList.toggle('text-white', active); button.classList.toggle('text-slate-500', !active); });
 
-            [tasksPage, salesPage, servicePage, conditionalPage, managerOverviewPage, managerGoalsPage].forEach(page => { page.classList.remove('active'); page.classList.add('hidden'); });
+            [tasksPage, salesPage, servicePage, conditionalPage, managerOverviewPage, managerGoalsPage, managerReportPage].forEach(page => { page.classList.remove('active'); page.classList.add('hidden'); });
             [navInicio, navTasks, navSales, navService, navConditional].forEach(nav => { nav.classList.add('text-slate-300'); nav.classList.remove('text-indigo-600'); });
 
             if (pageName === 'dashboard') {
@@ -1511,6 +1621,10 @@
                 managerGoalsPage.classList.remove('hidden');
                 setGoalPeriodDefaults();
                 renderGoalForm();
+            } else if (pageName === 'manager-report') {
+                dashboard.classList.add('hidden');
+                managerReportPage.classList.remove('hidden');
+                initManagerReport();
             }
         }
 
