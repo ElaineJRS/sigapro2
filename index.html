@@ -998,7 +998,10 @@
             const today = getLocalDateKey();
             const selectedMonth = today.slice(0, 7);
             const goals = getGoals().filter(goal => goal.userId === userId && goal.lojaId === session?.lojaId);
-            return { weekly: goals.find(goal => today >= goal.weekStart && today <= goal.weekEnd) || null, monthly: goals.find(goal => goal.month === selectedMonth) || null };
+            const weeklyGoals = goals.filter(goal => goal.weekStart && goal.weekEnd).sort((first, second) => first.weekStart.localeCompare(second.weekStart));
+            const activeWeekly = weeklyGoals.find(goal => today >= goal.weekStart && today <= goal.weekEnd);
+            const latestWeekly = weeklyGoals.filter(goal => goal.weekStart <= today).at(-1) || weeklyGoals[0] || null;
+            return { weekly: activeWeekly || latestWeekly, monthly: goals.find(goal => goal.month === selectedMonth) || null };
         }
 
         function daysBetween(start, end) {
